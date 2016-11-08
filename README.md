@@ -1,41 +1,84 @@
-Filepicker
+# FilePicker
 
-Translucent Activity that handles taking a picture or selecting any type of file (the MIME type must be supported by the device).
+Hello there! I’m **FilePicker**, the open source Uri helper for Android.
 
-Usage
+Let me introduce myself.
 
-In Manifest:
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    Inside application:
-    <activity
-            android:name="filepicker.FilePickerActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Translucent" />
 
-In Activity or Fragment Class:
+## What do I do?
 
+**FilePicker** is an Android library that basically boils down to an Activity that will handle all of the work related to taking a picture or selecting a file of any type. Example Activity can be found [here](https://github.com/nodes-android/filepicker/blob/master/app/src/main/java/dk/nodes/filepicker/FilePickerExampleActivity.java).
+
+**FilePicker** Is a translucent Activity so you won't have to worry about breaking the design. It uses the Android Native chooser so it will adapt to the different Android versions and OEMs.
+
+![Chooser Screenshot](http://cketti.de/img/share-url-to-clipboard/screenshot_share.png)
+
+## Usage
+Lets jump right in.
+
+In the Activity or Fragment class:
+
+```
 Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+```
+```
 startActivityForResult(intent, MY_REQUEST_CODE);
+```
+This will prompt the above native chooser.
 
-Implement onActivityResult.
+Since its an activity you can configure everything via intent.putExtra();
 
-Result codes ar the same as the Activity ones:
-RESULT_OK -> Intent will have a String that should be parsed to an URI
-RESULT_CANCELED -> User cancelled chooser or permission request
-RESULT_FIRST_USER -> Other errors, phone doesn't have any type of app that supports that MIME type for ex.
+To change the chooser text:
 
-@Override
+```
+intent.putExtra(FilePickerActivity.CHOOSER_TEXT, "Please select an action");
+```
+
+To get the camera directly:
+
+```
+intent.putExtra(FilePickerActivity.CAMERA, true);
+
+```
+
+To get the file picker directly with only images:
+
+```
+intent.putExtra(FilePickerActivity.FILE, true);
+
+```
+
+
+To get the file picker directly with only 1 specific MYME type:
+
+```
+intent.putExtra(FilePickerActivity.FILE, true);
+intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF);
+
+```
+
+To get the file picker with multiple MIME type just send and String Array:
+
+```
+intent.putExtra(FilePickerActivity.FILE, true);
+intent.putExtra(FilePickerActivity.MULTIPLE_TYPES, new String[]{FilePickerActivity.MIME_IMAGE, FilePickerActivity.MIME_PDF});
+
+```
+
+Here is how you would handle the onActivityResult:
+
+```
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == MY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                Uri uri = Uri.parse(data.getExtras().getString(FilePickerActivity.URI));
-                //Get the File from the Uri
-                new File(uri.getPath());
+                //Uri uri = Uri.parse(data.getExtras().getString(FilePickerActivity.URI));
+                //Create a file to send it to the server
+                //new File(uri.getPath());
                 //Load with Glide/Picasso
-                Glide.with(this).load(uri).into(imageView);
+                //Glide/Picasso.with(this).load(uri).into(imageView);
                 Toast.makeText(FilePickerExampleActivity.this, data.getExtras().getString(FilePickerActivity.URI), Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(FilePickerExampleActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
@@ -44,29 +87,33 @@ RESULT_FIRST_USER -> Other errors, phone doesn't have any type of app that suppo
             }
         }
     }
+```
 
-This library is just an activity and in order to customize it you just need to .putExtra to the intent.
 
-Just calling the activity will provide a chooser intent with Camera and File Explorer.
+### Please Note
 
-Camera:
-intent.putExtra(FilePickerActivity.CAMERA, true);
+This Library will handle the permissions and (if the phone has apps that can deal with that MIME type it will return the Uri.
 
-File explorer with images:
-intent.putExtra(FilePickerActivity.FILE, true);
+Make sure you know how to handle Uris, You can see commented out on RESULT_OK the 2 most basic examples but just in case.
 
-File explorer with a specific MIME type:
-intent.putExtra(FilePickerActivity.FILE, true);
-intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF);
+How to retrieve the uri from the intent:
 
-File explorer with a set of MIME types:
-intent.putExtra(FilePickerActivity.FILE, true);
-intent.putExtra(FilePickerActivity.MULTIPLE_TYPES, new String[]{FilePickerActivity.MIME_IMAGE, FilePickerActivity.MIME_PDF});
+```
+Uri uri = Uri.parse(data.getExtras().getString(FilePickerActivity.URI));
 
-Download
+```
 
-Gradle:
+How to create a File from the parsed Uri:
 
-dependencies {
-    compile 'dk.nodes.filepicker:filepicker:1.0'
-}
+```
+new File(uri.getPath());
+
+```
+
+How to load with Gliide or Picasso from the parsed Uri:
+
+```
+Glide.with(this).load(uri).into(imageView);
+Picasso.with(this).load(uri).into(imageView);
+
+```
