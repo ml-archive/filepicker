@@ -117,3 +117,11 @@ Glide.with(this).load(uri).into(imageView);
 Picasso.with(this).load(uri).into(imageView);
 
 ```
+
+## Download
+
+Gradle:
+
+dependencies {
+    compile 'dk.nodes.gutenberg:gutenberg:2.0'
+}
