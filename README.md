@@ -58,7 +58,7 @@ intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF);
 
 ```
 
-To get the file picker with multiple MIME type just send and String Array:
+To get the file picker with multiple MIME type just send a String Array:
 
 ```
 intent.putExtra(FilePickerActivity.FILE, true);
