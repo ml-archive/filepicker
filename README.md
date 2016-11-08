@@ -39,23 +39,19 @@ To get the camera directly:
 
 ```
 intent.putExtra(FilePickerActivity.CAMERA, true);
-
 ```
 
 To get the file picker directly with only images:
 
 ```
 intent.putExtra(FilePickerActivity.FILE, true);
-
 ```
 
 
 To get the file picker directly with only 1 specific MIME type:
-
 ```
 intent.putExtra(FilePickerActivity.FILE, true);
 intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF);
-
 ```
 
 To get the file picker with multiple MIME type just send a String Array:
@@ -63,7 +59,6 @@ To get the file picker with multiple MIME type just send a String Array:
 ```
 intent.putExtra(FilePickerActivity.FILE, true);
 intent.putExtra(FilePickerActivity.MULTIPLE_TYPES, new String[]{FilePickerActivity.MIME_IMAGE, FilePickerActivity.MIME_PDF});
-
 ```
 
 Here is how you would handle the onActivityResult:
@@ -100,14 +95,12 @@ How to retrieve the uri from the intent:
 
 ```
 Uri uri = Uri.parse(data.getExtras().getString(FilePickerActivity.URI));
-
 ```
 
 How to create a File from the parsed Uri:
 
 ```
 new File(uri.getPath());
-
 ```
 
 How to load with Gliide or Picasso from the parsed Uri:
@@ -115,13 +108,14 @@ How to load with Gliide or Picasso from the parsed Uri:
 ```
 Glide.with(this).load(uri).into(imageView);
 Picasso.with(this).load(uri).into(imageView);
-
 ```
 
 ## Download
 
 Gradle:
 
+```
 dependencies {
-    compile 'dk.nodes.gutenberg:gutenberg:2.0'
+    compile 'dk.nodes.filepicker:filepicker:1.0'
 }
+```
