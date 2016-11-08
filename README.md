@@ -50,7 +50,7 @@ intent.putExtra(FilePickerActivity.FILE, true);
 ```
 
 
-To get the file picker directly with only 1 specific MYME type:
+To get the file picker directly with only 1 specific MIME type:
 
 ```
 intent.putExtra(FilePickerActivity.FILE, true);
