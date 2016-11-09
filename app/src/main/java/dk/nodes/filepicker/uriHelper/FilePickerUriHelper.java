@@ -33,12 +33,22 @@ public class FilePickerUriHelper {
         return new File(getUri(intent).getPath());
     }
 
-    public static Bitmap getBitmap(Activity activity, Intent intent) throws IOException {
-        return MediaStore.Images.Media.getBitmap(activity.getContentResolver(), getUri(intent));
+    public static Bitmap getBitmap(Activity activity, Intent intent) {
+        try {
+            return MediaStore.Images.Media.getBitmap(activity.getContentResolver(), getUri(intent));
+        } catch (IOException e) {
+            //It might be a large bitmap so we try just in case
+            return getLargeBitmap(intent);
+        }
     }
 
-    public static Bitmap getLargeBitmap(Intent intent) throws IOException {
-        BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(getUriString(intent), false);
+    public static Bitmap getLargeBitmap(Intent intent) {
+        BitmapRegionDecoder decoder = null;
+        try {
+            decoder = BitmapRegionDecoder.newInstance(getUriString(intent), false);
+        } catch (IOException e) {
+            return null;
+        }
         return decoder.decodeRegion(new Rect(10, 10, 50, 50), null);
     }
 }
