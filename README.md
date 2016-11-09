@@ -38,27 +38,27 @@ intent.putExtra(FilePickerActivity.CHOOSER_TEXT, "Please select an action");
 To get the camera directly:
 
 ```
-intent.putExtra(FilePickerActivity.CAMERA, true);
+intent.putExtra(FilePickerConstants.CAMERA, true);
 ```
 
 To get the file picker directly with only images:
 
 ```
-intent.putExtra(FilePickerActivity.FILE, true);
+intent.putExtra(FilePickerConstants.FILE, true);
 ```
 
 
 To get the file picker directly with only 1 specific MIME type:
 ```
-intent.putExtra(FilePickerActivity.FILE, true);
-intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF);
+intent.putExtra(FilePickerConstants.FILE, true);
+intent.putExtra(FilePickerConstants.TYPE, FilePickerConstants.MIME_PDF);
 ```
 
 To get the file picker with multiple MIME type just send a String Array:
 
 ```
-intent.putExtra(FilePickerActivity.FILE, true);
-intent.putExtra(FilePickerActivity.MULTIPLE_TYPES, new String[]{FilePickerActivity.MIME_IMAGE, FilePickerActivity.MIME_PDF});
+intent.putExtra(FilePickerConstants.FILE, true);
+intent.putExtra(FilePickerConstants.MULTIPLE_TYPES, new String[]{FilePickerConstants.MIME_IMAGE, FilePickerConstants.MIME_PDF});
 ```
 
 Here is how you would handle the onActivityResult:
@@ -69,12 +69,7 @@ Here is how you would handle the onActivityResult:
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == MY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                //Uri uri = Uri.parse(data.getExtras().getString(FilePickerActivity.URI));
-                //Create a file to send it to the server
-                //new File(uri.getPath());
-                //Load with Glide/Picasso
-                //Glide/Picasso.with(this).load(uri).into(imageView);
-                Toast.makeText(FilePickerExampleActivity.this, data.getExtras().getString(FilePickerActivity.URI), Toast.LENGTH_SHORT).show();
+                Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(intent), Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(FilePickerExampleActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_FIRST_USER) {
@@ -89,18 +84,30 @@ Here is how you would handle the onActivityResult:
 
 This Library will handle the permissions and (if the phone has apps that can deal with that MIME type it will return the Uri.
 
-Make sure you know how to handle Uris, You can see commented out on RESULT_OK the 2 most basic examples but just in case.
+If you want some helper methods please feel free to use FilePickerUriHelper class.
 
-How to retrieve the uri from the intent:
-
-```
-Uri uri = Uri.parse(data.getExtras().getString(FilePickerActivity.URI));
-```
-
-How to create a File from the parsed Uri:
+How to retrieve the Uri String from the intent:
 
 ```
-new File(uri.getPath());
+String uriString = FilePickerUriHelper.getUriString(intent);
+```
+
+How to retrieve the Uri from the intent:
+
+```
+Uri uri = FilePickerUriHelper.getUri(intent);
+```
+
+How to get the file from the intent:
+
+```
+File file = FilePickerUriHelper.getFile(intent);
+```
+
+How to get the bitmap from the intent:
+
+```
+Bitmap bitmap = FilePickerUriHelper.getBitmap(intent);
 ```
 
 How to load with Gliide or Picasso from the parsed Uri:
@@ -116,6 +123,6 @@ Gradle:
 
 ```
 dependencies {
-    compile 'dk.nodes.filepicker:filepicker:1.0'
+    compile 'dk.nodes.filepicker:filepicker:1.1'
 }
 ```
