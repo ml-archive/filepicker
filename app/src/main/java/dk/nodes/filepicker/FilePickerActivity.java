@@ -6,40 +6,27 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+
+import dk.nodes.filepicker.intentHelper.CameraIntent;
+import dk.nodes.filepicker.intentHelper.ChooserIntent;
+import dk.nodes.filepicker.intentHelper.FileIntent;
+
+import static dk.nodes.filepicker.FilePickerConstants.CAMERA;
+import static dk.nodes.filepicker.FilePickerConstants.CHOOSER_TEXT;
+import static dk.nodes.filepicker.FilePickerConstants.FILE;
+import static dk.nodes.filepicker.FilePickerConstants.MULTIPLE_TYPES;
+import static dk.nodes.filepicker.FilePickerConstants.PERMISSION_REQUEST_CODE;
+import static dk.nodes.filepicker.FilePickerConstants.REQUEST_CODE;
+import static dk.nodes.filepicker.FilePickerConstants.TYPE;
+import static dk.nodes.filepicker.FilePickerConstants.URI;
+import static dk.nodes.filepicker.permissionHelper.PermissionHelper.askPermission;
+import static dk.nodes.filepicker.permissionHelper.PermissionHelper.requirePermission;
 
 public class FilePickerActivity extends AppCompatActivity {
 
     Uri outputFileUri;
-
-    public static String URI = "URI";
-
-    public static String CAMERA = "CAMERA";
-
-    public static String FILE = "FILE";
-    public static String TYPE = "TYPE";
-    public static String MULTIPLE_TYPES = "MULTIPLE_TYPES";
-
-    public static String MIME_IMAGE = "image/*";
-    public static String MIME_IMAGE_BMP = "image/bmp";
-    public static String MIME_IMAGE_GIF = "image/gif";
-    public static String MIME_IMAGE_JPG = "image/jpg";
-    public static String MIME_IMAGE_PNG = "image/png";
-
-    public static String MIME_VIDEO = "video/*";
-    public static String MIME_VIDEO_WAV = "video/wav";
-    public static String MIME_VIDEO_MP4 = "video/mp4";
-    public static String MIME_TEXT_PLAIN = "text/plain";
-    public static String MIME_PDF = "application/pdf";
-
-    public static String CHOOSER_TEXT = "CHOOSER_TEXT";
-
-    public static int REQUEST_CODE = 2;
-    public static int PERMISSION_REQUEST_CODE = 3;
-
     String chooserText = "Choose an action";
 
     @Override
@@ -49,22 +36,11 @@ public class FilePickerActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(CHOOSER_TEXT)) {
             chooserText = getIntent().getStringExtra(CHOOSER_TEXT);
         }
-        if (!hasPermissions()) {
-            requestPermission();
+        if (requirePermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA)) {
+            askPermission(this, PERMISSION_REQUEST_CODE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA);
         } else {
             start();
         }
-    }
-
-    private boolean hasPermissions() {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requestPermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
-                PERMISSION_REQUEST_CODE);
     }
 
     @Override
@@ -121,40 +97,33 @@ public class FilePickerActivity extends AppCompatActivity {
         final Intent intent;
         if (getIntent().getBooleanExtra(CAMERA, false)) {
             //Only camera
-            intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE, outputFileUri);
+            intent = CameraIntent.cameraIntent(outputFileUri);
         } else if (getIntent().getBooleanExtra(FILE, false)) {
             //Only file
-            intent = new Intent().setAction(Intent.ACTION_GET_CONTENT);
+            intent = FileIntent.fileIntent("image/*");
             if (null != getIntent().getStringArrayExtra(MULTIPLE_TYPES)) {
                 //User can specify multiple types for the intent.
-                intent.setType("*/*");
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, getIntent().getStringArrayExtra(MULTIPLE_TYPES));
-            } else {
+                FileIntent.setTypes(intent, getIntent().getStringArrayExtra(MULTIPLE_TYPES));
+            } else if (null != getIntent().getStringExtra(TYPE)) {
                 //If no types defaults to image files, if just 1 type applies type
-                String type = null == getIntent().getStringExtra(TYPE) ? "image/*" : getIntent().getStringExtra(TYPE);
-                intent.setType(type);
+                FileIntent.setType(intent, getIntent().getStringExtra(TYPE));
             }
         } else {
             //We assume its an image since developer didn't specify anything and we will show chooser with Camera, File explorers (including gdrive, dropbox...)
-            intent = chooserIntent();
+            intent = ChooserIntent.chooserIntent(chooserText);
         }
 
         if (intent.resolveActivity(getPackageManager()) != null) {
-            new Handler().post(new Runnable() {
+            new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     startActivityForResult(intent, REQUEST_CODE);
                 }
-            });
+            }, 500);
 
         } else {
             setResult(RESULT_FIRST_USER);
             finish();
         }
-    }
-
-    Intent chooserIntent() {
-        return Intent.createChooser(new Intent().setType("image/*").setAction(Intent.ACTION_GET_CONTENT), chooserText)
-                .putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{new Intent(MediaStore.ACTION_IMAGE_CAPTURE)});
     }
 }
