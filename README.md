@@ -1,3 +1,14 @@
+### Download
+
+Gradle:
+
+```
+dependencies {
+    compile 'dk.nodes.filepicker:filepicker:1.2'
+}
+```
+
+
 # FilePicker
 
 **FilePicker** Is an Android library that will get the Uri you need. It even has some Uri helper methods!
@@ -113,14 +124,4 @@ Uri uri = FilePickerUriHelper.getUri(intent);
 Glide.with(this).load(uri).into(imageView);
 OR
 Picasso.with(this).load(uri).into(imageView);
-```
-
-## Download
-
-Gradle:
-
-```
-dependencies {
-    compile 'dk.nodes.filepicker:filepicker:1.1'
-}
 ```
