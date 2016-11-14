@@ -27,7 +27,7 @@ In the Activity or Fragment class:
 Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
 startActivityForResult(intent, MY_REQUEST_CODE);
 ```
-This will prompt the native chooser with the options of Camera and File (Only Images).
+This will prompt the native chooser with the options of Camera and File (only Images).
 
 Since its an activity you can configure everything via intent.putExtra();
 
