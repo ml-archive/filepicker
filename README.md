@@ -1,15 +1,16 @@
 # FilePicker
 
-**FilePicker** Is an Android library that will get the Uri you need. It even has some Uri helper methods!
-
 ## Download
-
 Gradle:
 ```
 dependencies {
     compile 'dk.nodes.filepicker:filepicker:1.2'
 }
 ```
+
+## Wait, what is this?
+
+**FilePicker** Is an Android library that will get the Uri you need. It even has some Uri helper methods!
 
 ## How is that even possible?
 
@@ -83,36 +84,31 @@ Here is how you would handle the onActivityResult:
 
 ### Please Note
 
-This Library will handle the permissions and (if the phone has apps that can deal with that MIME type it will return the Uri.
+This Library will handle the permissions and (if the phone has apps that can deal with that MIME type) it will return the Uri.
 
 If you want some helper methods please feel free to use FilePickerUriHelper class.
 
 **How to retrieve the Uri String from the intent:**
-
 ```
 String uriString = FilePickerUriHelper.getUriString(intent);
 ```
 
 **How to retrieve the Uri from the intent:**
-
 ```
 Uri uri = FilePickerUriHelper.getUri(intent);
 ```
 
 **How to get the file from the intent:**
-
 ```
 File file = FilePickerUriHelper.getFile(intent);
 ```
 
 **How to get the bitmap from the intent:**
-
 ```
 Bitmap bitmap = FilePickerUriHelper.getBitmap(intent);
 ```
 
 **How to load with Gliide or Picasso from the parsed Uri:**
-
 ```
 Uri uri = FilePickerUriHelper.getUri(intent);
 Glide.with(this).load(uri).into(imageView);
