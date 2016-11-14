@@ -2,10 +2,11 @@ package dk.nodes.filepicker.intentHelper;
 
 import android.content.Intent;
 
-public class FileIntent {
+public class FilePickerFileIntent {
 
     public static Intent fileIntent(String type) {
-        return new Intent().setAction(Intent.ACTION_GET_CONTENT);
+        type = null != type ? type : "image/*";
+        return new Intent().setAction(Intent.ACTION_GET_CONTENT).setType(type);
     }
 
     public static void setType(Intent intent, String type) {

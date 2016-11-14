@@ -6,7 +6,7 @@ import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 
-public class PermissionHelper {
+public class FilePickerPermissionHelper {
 
     public static boolean requirePermission(Context context, String... permissions) {
         for (String permission : permissions) {

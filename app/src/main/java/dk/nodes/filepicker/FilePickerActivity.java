@@ -9,9 +9,9 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 
-import dk.nodes.filepicker.intentHelper.CameraIntent;
-import dk.nodes.filepicker.intentHelper.ChooserIntent;
-import dk.nodes.filepicker.intentHelper.FileIntent;
+import dk.nodes.filepicker.intentHelper.FilePickerCameraIntent;
+import dk.nodes.filepicker.intentHelper.FilePickerChooserIntent;
+import dk.nodes.filepicker.intentHelper.FilePickerFileIntent;
 
 import static dk.nodes.filepicker.FilePickerConstants.CAMERA;
 import static dk.nodes.filepicker.FilePickerConstants.CHOOSER_TEXT;
@@ -21,8 +21,8 @@ import static dk.nodes.filepicker.FilePickerConstants.PERMISSION_REQUEST_CODE;
 import static dk.nodes.filepicker.FilePickerConstants.REQUEST_CODE;
 import static dk.nodes.filepicker.FilePickerConstants.TYPE;
 import static dk.nodes.filepicker.FilePickerConstants.URI;
-import static dk.nodes.filepicker.permissionHelper.PermissionHelper.askPermission;
-import static dk.nodes.filepicker.permissionHelper.PermissionHelper.requirePermission;
+import static dk.nodes.filepicker.permissionHelper.FilePickerPermissionHelper.askPermission;
+import static dk.nodes.filepicker.permissionHelper.FilePickerPermissionHelper.requirePermission;
 
 public class FilePickerActivity extends AppCompatActivity {
 
@@ -66,6 +66,11 @@ public class FilePickerActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_CODE) {
+                //TODO Official doc, looks bad but test this just in case
+//                Bundle extras = data.getExtras();
+//                Bitmap imageBitmap = (Bitmap) extras.get("data");
+//                mImageView.setImageBitmap(imageBitmap);
+
                 String uri = null;
                 if (data.getData() != null) {
                     uri = data.getData().toString();
@@ -97,20 +102,20 @@ public class FilePickerActivity extends AppCompatActivity {
         final Intent intent;
         if (getIntent().getBooleanExtra(CAMERA, false)) {
             //Only camera
-            intent = CameraIntent.cameraIntent(outputFileUri);
+            intent = FilePickerCameraIntent.cameraIntent(outputFileUri);
         } else if (getIntent().getBooleanExtra(FILE, false)) {
             //Only file
-            intent = FileIntent.fileIntent("image/*");
+            intent = FilePickerFileIntent.fileIntent("image/*");
             if (null != getIntent().getStringArrayExtra(MULTIPLE_TYPES)) {
                 //User can specify multiple types for the intent.
-                FileIntent.setTypes(intent, getIntent().getStringArrayExtra(MULTIPLE_TYPES));
+                FilePickerFileIntent.setTypes(intent, getIntent().getStringArrayExtra(MULTIPLE_TYPES));
             } else if (null != getIntent().getStringExtra(TYPE)) {
                 //If no types defaults to image files, if just 1 type applies type
-                FileIntent.setType(intent, getIntent().getStringExtra(TYPE));
+                FilePickerFileIntent.setType(intent, getIntent().getStringExtra(TYPE));
             }
         } else {
             //We assume its an image since developer didn't specify anything and we will show chooser with Camera, File explorers (including gdrive, dropbox...)
-            intent = ChooserIntent.chooserIntent(chooserText);
+            intent = FilePickerChooserIntent.chooserIntent(chooserText);
         }
 
         if (intent.resolveActivity(getPackageManager()) != null) {
