@@ -1,17 +1,15 @@
-### Download
+# FilePicker
+
+**FilePicker** Is an Android library that will get the Uri you need. It even has some Uri helper methods!
+
+## Download
 
 Gradle:
-
 ```
 dependencies {
     compile 'dk.nodes.filepicker:filepicker:1.2'
 }
 ```
-
-
-# FilePicker
-
-**FilePicker** Is an Android library that will get the Uri you need. It even has some Uri helper methods!
 
 ## How is that even possible?
 
@@ -22,17 +20,13 @@ Calm down, **FilePicker** is just a transparent Activity that will handle all of
 ![Chooser Screenshot](http://cketti.de/img/share-url-to-clipboard/screenshot_share.png)
 
 ## Usage
-Lets jump right in.
 
 In the Activity or Fragment class:
-
 ```
 Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
-```
-```
 startActivityForResult(intent, MY_REQUEST_CODE);
 ```
-This will prompt the above native chooser.
+This will prompt the native chooser with the options of Camera and File (Only Images).
 
 Since its an activity you can configure everything via intent.putExtra();
 
