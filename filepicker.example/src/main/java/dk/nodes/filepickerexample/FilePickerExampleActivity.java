@@ -24,7 +24,6 @@ public class FilePickerExampleActivity extends AppCompatActivity {
     final String DEFAULT_FILE_TYPE = "FILE TYPE (startActivityForResult with intent.putExtra(FilePickerActivity.FILE, true); AND intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF); for example";
     final String DEFAULT_FILE_MULTIPLE_TYPES = "FILE MULTIPLE TYPES (startActivityForResult with intent.putExtra(FilePickerActivity.FILE, true); AND intent.putExtra(FilePickerActivity.MULTIPLE_TYPES, new String[]{FilePickerActivity.MIME_IMAGE, FilePickerActivity.MIME_PDF});";
     Button typeBtn;
-    ImageView imageView;
     Button goBtn;
     Intent intent;
 
@@ -32,7 +31,6 @@ public class FilePickerExampleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_picker_example);
-        imageView = (ImageView) findViewById(R.id.image_view);
         typeBtn = (Button) findViewById(R.id.type_btn);
         goBtn = (Button) findViewById(R.id.go_btn);
 
@@ -87,8 +85,6 @@ public class FilePickerExampleActivity extends AppCompatActivity {
         if (requestCode == MY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(data), Toast.LENGTH_SHORT).show();
-                Drawable imageDrawable = new BitmapDrawable(getResources(), FilePickerUriHelper.getBitmap(FilePickerExampleActivity.this, data));
-                imageView.setBackground(imageDrawable);
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(FilePickerExampleActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_FIRST_USER) {

@@ -3,17 +3,12 @@ package dk.nodes.filepicker;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
-import java.io.File;
-
-import dk.nodes.filepicker.bitmapHelper.BitmapHelper;
 import dk.nodes.filepicker.intentHelper.FilePickerCameraIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerChooserIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerFileIntent;
@@ -32,6 +27,7 @@ import static dk.nodes.filepicker.permissionHelper.FilePickerPermissionHelper.re
 public class FilePickerActivity extends AppCompatActivity {
 
     Uri outputFileUri;
+
     String chooserText = "Choose an action";
 
     @Override
@@ -71,21 +67,8 @@ public class FilePickerActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_CODE) {
-                //TODO Official doc, looks bad but test this just in case
-//                Bundle extras = data.getExtras();
-//                Bitmap imageBitmap = (Bitmap) extras.get("data");
-//                mImageView.setImageBitmap(imageBitmap);
                 String uri = null;
-
-                // Camera intent, save bitmap directly and get Uri
-                if(data.getExtras() != null && data.getExtras().get("data") != null) {
-                    try {
-                        File file = BitmapHelper.writeBitmap(this, (Bitmap) data.getExtras().get("data"));
-                        uri = Uri.fromFile(file).toString();
-                    } catch (Exception e) {
-                        Log.e("FilePickerActivity", e.toString());
-                    }
-                } else if (data.getData() != null) {
+                if (data.getData() != null) {
                     uri = data.getData().toString();
                 } else if (outputFileUri != null) {
                     uri = outputFileUri.toString();
@@ -114,7 +97,7 @@ public class FilePickerActivity extends AppCompatActivity {
     void start() {
         final Intent intent;
         if (getIntent().getBooleanExtra(CAMERA, false)) {
-            //Only camera
+            outputFileUri = FilePickerCameraIntent.setUri(this);
             intent = FilePickerCameraIntent.cameraIntent(outputFileUri);
         } else if (getIntent().getBooleanExtra(FILE, false)) {
             //Only file
@@ -128,7 +111,8 @@ public class FilePickerActivity extends AppCompatActivity {
             }
         } else {
             //We assume its an image since developer didn't specify anything and we will show chooser with Camera, File explorers (including gdrive, dropbox...)
-            intent = FilePickerChooserIntent.chooserIntent(chooserText);
+            outputFileUri = FilePickerCameraIntent.setUri(this);
+            intent = FilePickerChooserIntent.chooserIntent(chooserText, outputFileUri);
         }
 
         if (intent.resolveActivity(getPackageManager()) != null) {
