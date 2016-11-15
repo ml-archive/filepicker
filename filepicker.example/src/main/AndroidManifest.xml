@@ -17,11 +17,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="dk.nodes.filepicker.FilePickerActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Translucent"/>
-
     </application>
 
     <uses-permission android:name="android.permission.CAMERA"/>
