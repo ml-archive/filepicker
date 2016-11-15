@@ -1,4 +1,4 @@
-package dk.nodes.filepicker;
+package dk.nodes.filepickerexample;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import dk.nodes.filepicker.FilePickerActivity;
+import dk.nodes.filepicker.FilePickerConstants;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 
 public class FilePickerExampleActivity extends AppCompatActivity {
