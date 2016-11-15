@@ -1,4 +1,4 @@
-package dk.nodes.filepicker;
+package dk.nodes.filepickerexample;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import dk.nodes.filepicker.FilePickerActivity;
+import dk.nodes.filepicker.FilePickerConstants;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 
 public class FilePickerExampleActivity extends AppCompatActivity {
@@ -80,7 +82,7 @@ public class FilePickerExampleActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == MY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(intent), Toast.LENGTH_SHORT).show();
+                Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(data), Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(FilePickerExampleActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
             } else if (resultCode == RESULT_FIRST_USER) {

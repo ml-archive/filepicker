@@ -3,12 +3,17 @@ package dk.nodes.filepicker;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
+import java.io.File;
+
+import dk.nodes.filepicker.bitmapHelper.BitmapHelper;
 import dk.nodes.filepicker.intentHelper.FilePickerCameraIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerChooserIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerFileIntent;
@@ -70,9 +75,17 @@ public class FilePickerActivity extends AppCompatActivity {
 //                Bundle extras = data.getExtras();
 //                Bitmap imageBitmap = (Bitmap) extras.get("data");
 //                mImageView.setImageBitmap(imageBitmap);
-
                 String uri = null;
-                if (data.getData() != null) {
+
+                // Camera intent, save bitmap directly and get Uri
+                if(data.getExtras() != null && data.getExtras().get("data") != null) {
+                    try {
+                        File file = BitmapHelper.writeBitmap(this, (Bitmap) data.getExtras().get("data"));
+                        uri = Uri.fromFile(file).toString();
+                    } catch (Exception e) {
+                        Log.e("FilePickerActivity", e.toString());
+                    }
+                } else if (data.getData() != null) {
                     uri = data.getData().toString();
                 } else if (outputFileUri != null) {
                     uri = outputFileUri.toString();
