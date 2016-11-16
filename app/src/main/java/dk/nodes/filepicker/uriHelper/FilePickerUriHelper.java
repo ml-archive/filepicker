@@ -1,5 +1,6 @@
 package dk.nodes.filepicker.uriHelper;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
@@ -55,23 +57,45 @@ public class FilePickerUriHelper {
         return decoder.decodeRegion(new Rect(10, 10, 50, 50), null);
     }
 
+    @TargetApi(19)
     public static File getFileFromContentString(@NonNull Context context, @NonNull String uriString) {
-        String filePath;
-        if (uriString != null && uriString.startsWith("content")) {
-            Uri uri = Uri.parse(uriString);
-            if (uri == null) {
-                return null;
+        String filePath = uriString;
+        Uri uri = Uri.parse(uriString);
+
+        // Used the new photos app which uses a different API apparently
+        if (uriString.toString().contains("providers.media.documents/")) {
+            // Will return "image:x*"
+            String wholeID = DocumentsContract.getDocumentId(uri);
+
+            // Split at colon, use second item in the array
+            String id = wholeID.split(":")[1];
+
+            String[] column = {MediaStore.Images.Media.DATA};
+
+            // where id is equal to
+            String sel = MediaStore.Images.Media._ID + "=?";
+
+            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column, sel, new String[]{id}, null);
+
+            int columnIndex = cursor.getColumnIndex(column[0]);
+
+            if (cursor.moveToFirst()) {
+                filePath = cursor.getString(columnIndex);
             }
-            Cursor cursor = context.getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
-            if (cursor == null) {
-                return null;
-            }
-            cursor.moveToFirst();
-            filePath = cursor.getString(0);
+
             cursor.close();
+
         } else {
-            filePath = uriString;
+            String[] filePathColumn = {MediaStore.Images.Media.DATA, MediaStore.MediaColumns.DATA};
+
+            Cursor cursor = context.getContentResolver().query(uri, filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            filePath = cursor.getString(columnIndex);
+            cursor.close();
         }
+
         return new File(filePath);
     }
 
