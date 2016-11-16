@@ -29,12 +29,11 @@ public class FilePickerConstants {
      */
     public final static String MIME_PDF = "application/pdf";
     public final static String MIME_TEXT_PLAIN = "text/plain";
-    final static int REQUEST_CODE = 2;
-    final static int PERMISSION_REQUEST_CODE = 3;
-
     /**
      * Response codes
      */
     public static final int RESULT_CODE_FAILURE = 10;
+    final static int REQUEST_CODE = 2;
+    final static int PERMISSION_REQUEST_CODE = 3;
 
 }

@@ -7,7 +7,7 @@ def _ossrhPassword = this.properties['NEXUS_PASSWORD']
 
 // Artifact settings
 def _group = 'dk.nodes.filepicker'
-def _version = '1.3'
+def _version = '1.4'
 def _archivesBaseName = 'filepicker'
 
 def _name = 'FilePicker Library'

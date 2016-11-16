@@ -15,6 +15,7 @@ import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+
 /**
  * Created by joso on 16/11/2016.
  */
@@ -39,10 +40,9 @@ public class ImgurManager {
         call.enqueue(new Callback<ImageResponse>() {
             @Override
             public void onResponse(Call<ImageResponse> call, Response<ImageResponse> response) {
-                if(response.isSuccessful() && callback != null) {
+                if (response.isSuccessful() && callback != null) {
                     callback.onUploaded(response.body());
-                }
-                else {
+                } else {
                     Log.e("UploadImage", response.errorBody().toString());
                 }
             }

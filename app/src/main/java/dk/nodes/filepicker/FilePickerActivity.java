@@ -13,7 +13,7 @@ import android.util.Log;
 
 import java.io.File;
 
-import dk.nodes.filepicker.bitmapHelper.BitmapHelper;
+import dk.nodes.filepicker.bitmapHelper.FilePickerBitmapHelper;
 import dk.nodes.filepicker.intentHelper.FilePickerCameraIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerChooserIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerFileIntent;
@@ -78,10 +78,10 @@ public class FilePickerActivity extends AppCompatActivity {
                     uri = data.getData().toString();
                 } else if (outputFileUri != null) {
                     uri = outputFileUri.toString();
-                } else if (data.getExtras() != null && data.getExtras().get("data") != null) {
+                } else if (data != null && data.getExtras() != null && data.getExtras().get("data") != null) {
                     uri = data.getExtras().get("data").toString();
                     try {
-                        File file = BitmapHelper.writeBitmap(this, (Bitmap) data.getExtras().get("data"));
+                        File file = FilePickerBitmapHelper.writeBitmap(this, (Bitmap) data.getExtras().get("data"), false);
                         uri = Uri.fromFile(file).toString();
                     } catch (Exception e) {
                         Log.e("FilePickerActivity", e.toString());
