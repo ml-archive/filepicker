@@ -103,5 +103,4 @@ public class FilePickerUriHelper {
         return file;
     }
 
-
 }

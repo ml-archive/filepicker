@@ -68,7 +68,7 @@ public class FilePickerActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_CODE) {
                 String uri = null;
-                if (data.getData() != null) {
+                if (data != null && data.getData() != null) {
                     uri = data.getData().toString();
                 } else if (outputFileUri != null) {
                     uri = outputFileUri.toString();
