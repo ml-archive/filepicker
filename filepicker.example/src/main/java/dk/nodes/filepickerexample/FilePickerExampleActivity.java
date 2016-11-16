@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
@@ -39,9 +38,6 @@ public class FilePickerExampleActivity extends AppCompatActivity {
     Button startActivityForResultBtn;
     Intent intent;
 
-    boolean image;
-    PopupMenu popupMenu;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,17 +49,9 @@ public class FilePickerExampleActivity extends AppCompatActivity {
         fileIv = (ImageView) findViewById(R.id.file_iv);
         startActivityForResultBtn = (Button) findViewById(R.id.start_activity_for_result_btn);
 
-        image = true;
         toolbar.setTitle(DEFAULT);
         typeBtn.setText(DEFAULT_INTENT);
         newIntent();
-
-        popupMenu = new PopupMenu(this, typeBtn);
-        popupMenu.getMenu().add("DEFAULT_INTENT");
-        popupMenu.getMenu().add("CAMERA");
-        popupMenu.getMenu().add("FILE IMAGES");
-        popupMenu.getMenu().add("FILE TYPE");
-        popupMenu.getMenu().add("FILE MULTIPLE TYPES");
 
         typeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,9 +79,7 @@ public class FilePickerExampleActivity extends AppCompatActivity {
                     return;
                 }
                 uriIv.setImageURI(FilePickerUriHelper.getUri(data));
-                Glide.with(this)
-                        .load(FilePickerUriHelper.getUri(data))
-                        .into(glideIv);
+                Glide.with(this).load(FilePickerUriHelper.getUri(data)).into(glideIv);
                 fileIv.setImageURI(Uri.fromFile(FilePickerUriHelper.getFile(this, data)));
                 ImgurManager imgurManager = new ImgurManager();
                 imgurManager.uploadImage(FilePickerUriHelper.getFile(FilePickerExampleActivity.this, data), new ImgurManager.UploadCallback() {
@@ -119,33 +105,28 @@ public class FilePickerExampleActivity extends AppCompatActivity {
         String buttonText = typeBtn.getText().toString();
         switch (buttonText) {
             case DEFAULT_INTENT:
-                image = true;
                 toolbar.setTitle(CAMERA);
                 buttonText = CAMERA_INTENT;
                 intent.putExtra(FilePickerConstants.CAMERA, true);
                 break;
             case CAMERA_INTENT:
-                image = true;
                 toolbar.setTitle(FILE_IMAGE);
                 buttonText = FILE_IMAGE_INTENT;
                 intent.putExtra(FilePickerConstants.FILE, true);
                 break;
             case FILE_IMAGE_INTENT:
-                image = false;
                 toolbar.setTitle(FILE_TYPE);
                 buttonText = FILE_TYPE_INTENT;
                 intent.putExtra(FilePickerConstants.FILE, true);
                 intent.putExtra(FilePickerConstants.TYPE, FilePickerConstants.MIME_PDF);
                 break;
             case FILE_TYPE_INTENT:
-                image = false;
                 toolbar.setTitle(FILE_MULTIPLE_TYPES);
                 buttonText = FILE_MULTIPLE_TYPES_INTENT;
                 intent.putExtra(FilePickerConstants.FILE, true);
                 intent.putExtra(FilePickerConstants.MULTIPLE_TYPES, new String[]{FilePickerConstants.MIME_PDF, FilePickerConstants.MIME_VIDEO});
                 break;
             case FILE_MULTIPLE_TYPES_INTENT:
-                image = true;
                 toolbar.setTitle(DEFAULT);
                 buttonText = DEFAULT_INTENT;
                 break;
