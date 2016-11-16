@@ -12,6 +12,8 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
+
 import dk.nodes.filepicker.FilePickerActivity;
 import dk.nodes.filepicker.FilePickerConstants;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
@@ -80,7 +82,11 @@ public class FilePickerExampleActivity extends AppCompatActivity {
                 }
                 uriIv.setImageURI(FilePickerUriHelper.getUri(data));
                 Glide.with(this).load(FilePickerUriHelper.getUri(data)).into(glideIv);
-                fileIv.setImageURI(Uri.fromFile(FilePickerUriHelper.getFile(this, data)));
+                File file = FilePickerUriHelper.getFile(this, data);
+                if (file == null){
+                    return;
+                }
+                fileIv.setImageURI(Uri.fromFile(file));
                 ImgurManager imgurManager = new ImgurManager();
                 imgurManager.uploadImage(FilePickerUriHelper.getFile(FilePickerExampleActivity.this, data), new ImgurManager.UploadCallback() {
                     @Override
