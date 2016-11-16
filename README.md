@@ -4,7 +4,7 @@
 Gradle:
 ```
 dependencies {
-    compile 'dk.nodes.filepicker:filepicker:1.3'
+    compile 'dk.nodes.filepicker:filepicker:1.4'
 }
 ```
 
@@ -71,10 +71,20 @@ Here is how you would handle the onActivityResult:
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == MY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(intent), Toast.LENGTH_SHORT).show();
+                Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(data), Toast.LENGTH_SHORT).show();
+                //If its not an image we don't load any of the image views
+                if (!isImage) {
+                    return;
+                }
+                //Imageview setImageUri with URI
+                uriIv.setImageURI(FilePickerUriHelper.getUri(data));
+                //Glide loading with URI
+                Glide.with(this).load(FilePickerUriHelper.getUri(data)).into(glideIv);
+                //Imageview setImageUri with URI from File
+                fileIv.setImageURI(Uri.fromFile(FilePickerUriHelper.getFile(this, data)));
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(FilePickerExampleActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_FIRST_USER) {
+            } else if (resultCode == RESULT_CODE_FAILURE) {
                 Toast.makeText(FilePickerExampleActivity.this, "Failed", Toast.LENGTH_SHORT).show();
             }
         }
@@ -100,18 +110,11 @@ Uri uri = FilePickerUriHelper.getUri(intent);
 
 **How to get the file from the intent:**
 ```
-File file = FilePickerUriHelper.getFile(intent);
+File file = FilePickerUriHelper.getFile(context, intent);
 ```
 
-**How to get the bitmap from the intent:**
-```
-Bitmap bitmap = FilePickerUriHelper.getBitmap(intent);
-```
-
-**How to load with Gliide or Picasso from the parsed Uri:**
+**How to load with Gliide from the parsed Uri:**
 ```
 Uri uri = FilePickerUriHelper.getUri(intent);
 Glide.with(this).load(uri).into(imageView);
-OR
-Picasso.with(this).load(uri).into(imageView);
 ```
