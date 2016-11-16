@@ -1,12 +1,22 @@
 package dk.nodes.filepickerexample;
 
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+
+import java.io.File;
 
 import com.squareup.picasso.Picasso;
 
@@ -23,8 +33,8 @@ public class FilePickerExampleActivity extends AppCompatActivity {
     final String DEFAULT_FILE_TYPE = "FILE TYPE (startActivityForResult with intent.putExtra(FilePickerActivity.FILE, true); AND intent.putExtra(FilePickerActivity.TYPE, FilePickerActivity.MIME_PDF); for example";
     final String DEFAULT_FILE_MULTIPLE_TYPES = "FILE MULTIPLE TYPES (startActivityForResult with intent.putExtra(FilePickerActivity.FILE, true); AND intent.putExtra(FilePickerActivity.MULTIPLE_TYPES, new String[]{FilePickerActivity.MIME_IMAGE, FilePickerActivity.MIME_PDF});";
     Button typeBtn;
+    ImageView imageView;
     Button goBtn;
-    ImageView exampleImageView;
     Intent intent;
 
     @Override
@@ -32,8 +42,8 @@ public class FilePickerExampleActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_picker_example);
         typeBtn = (Button) findViewById(R.id.type_btn);
+        imageView = (ImageView) findViewById(R.id.image_view);
         goBtn = (Button) findViewById(R.id.go_btn);
-        exampleImageView = (ImageView) findViewById(R.id.example_imageview);
 
         typeBtn.setText(DEFAULT);
         newIntent();
@@ -86,13 +96,11 @@ public class FilePickerExampleActivity extends AppCompatActivity {
         if (requestCode == MY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(FilePickerExampleActivity.this, FilePickerUriHelper.getUriString(data), Toast.LENGTH_SHORT).show();
-
                 ImgurManager imgurManager = new ImgurManager();
                 imgurManager.uploadImage(FilePickerUriHelper.getFileFromContentIntent(FilePickerExampleActivity.this, data), new ImgurManager.UploadCallback() {
                     @Override
                     public void onUploaded(ImgurManager.ImageResponse response) {
-                        Picasso.with(FilePickerExampleActivity.this).load(response.data.link).into(exampleImageView);
-                        exampleImageView.setVisibility(View.VISIBLE);
+                        Picasso.with(FilePickerExampleActivity.this).load(response.data.link).into(imageView);
                     }
                 });
             } else if (resultCode == RESULT_CANCELED) {
