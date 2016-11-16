@@ -1,7 +1,9 @@
 package dk.nodes.filepicker.uriHelper;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Rect;
@@ -52,4 +54,54 @@ public class FilePickerUriHelper {
         }
         return decoder.decodeRegion(new Rect(10, 10, 50, 50), null);
     }
+
+    public static File getFileFromContentUri(@NonNull Context context, @NonNull Uri uri) {
+        String filePath;
+        if (uri != null && "content".equals(uri.getScheme())) {
+            Cursor cursor = context.getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
+            cursor.moveToFirst();
+            filePath = cursor.getString(0);
+            cursor.close();
+        } else {
+            filePath = uri.getPath();
+        }
+
+        File file = new File(filePath);
+        return file;
+    }
+
+    public static File getFileFromContentString(@NonNull Context context, @NonNull String uriString) {
+        String filePath;
+        if (uriString != null && uriString.startsWith("content")) {
+            Uri uri = Uri.parse(uriString);
+            Cursor cursor = context.getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
+            cursor.moveToFirst();
+            filePath = cursor.getString(0);
+            cursor.close();
+        } else {
+            filePath = uriString;
+        }
+
+        File file = new File(filePath);
+        return file;
+    }
+
+    public static File getFileFromContentIntent(@NonNull Context context, @NonNull Intent intent) {
+        String filePath;
+        String uriString = getUriString(intent);
+        if (uriString != null && uriString.startsWith("content")) {
+            Uri uri = Uri.parse(uriString);
+            Cursor cursor = context.getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
+            cursor.moveToFirst();
+            filePath = cursor.getString(0);
+            cursor.close();
+        } else {
+            filePath = uriString;
+        }
+
+        File file = new File(filePath);
+        return file;
+    }
+
+
 }
