@@ -14,7 +14,7 @@ dependencies {
 
 ## How is that even possible?
 
-Calm down, **FilePicker** is just a transparent Activity that will handle all of the work related to getting an Uri from your phone, this includes taking a camera picture and in the next version even video recordings! Example Activity can be found [here](https://github.com/nodes-android/filepicker/blob/master/app/src/main/java/dk/nodes/filepicker/FilePickerExampleActivity.java).
+Calm down, **FilePicker** is just a transparent Activity that will handle all of the work related to getting an Uri from your phone, this includes taking a camera picture and in the next version even video recordings! Example Activity can be found [here](https://github.com/nodes-android/filepicker/blob/master/filepicker.example/src/main/java/dk/nodes/filepickerexample/FilePickerExampleActivity.java).
 
 **FilePicker** Is a translucent Activity so you won't have to worry about breaking the design. It uses the Android Native chooser so it will adapt to the different Android versions and OEMs! You will only get the Native chooser if you don't add any extras to the intent.
 
