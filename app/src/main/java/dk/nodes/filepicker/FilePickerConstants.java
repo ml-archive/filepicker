@@ -32,4 +32,9 @@ public class FilePickerConstants {
     final static int REQUEST_CODE = 2;
     final static int PERMISSION_REQUEST_CODE = 3;
 
+    /**
+     * Response codes
+     */
+    public static final int RESULT_CODE_FAILURE = 10;
+
 }

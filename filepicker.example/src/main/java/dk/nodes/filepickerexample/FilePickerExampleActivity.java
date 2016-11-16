@@ -14,6 +14,8 @@ import dk.nodes.filepicker.FilePickerActivity;
 import dk.nodes.filepicker.FilePickerConstants;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 
+import static dk.nodes.filepicker.FilePickerConstants.RESULT_CODE_FAILURE;
+
 public class FilePickerExampleActivity extends AppCompatActivity {
 
     public static int MY_REQUEST_CODE = 10;
@@ -95,7 +97,7 @@ public class FilePickerExampleActivity extends AppCompatActivity {
                 });
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(FilePickerExampleActivity.this, "User Canceled", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_FIRST_USER) {
+            } else if (resultCode == RESULT_CODE_FAILURE) {
                 Toast.makeText(FilePickerExampleActivity.this, "Failed", Toast.LENGTH_SHORT).show();
             }
         }

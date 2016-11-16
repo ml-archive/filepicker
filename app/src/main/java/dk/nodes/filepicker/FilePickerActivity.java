@@ -24,6 +24,7 @@ import static dk.nodes.filepicker.FilePickerConstants.FILE;
 import static dk.nodes.filepicker.FilePickerConstants.MULTIPLE_TYPES;
 import static dk.nodes.filepicker.FilePickerConstants.PERMISSION_REQUEST_CODE;
 import static dk.nodes.filepicker.FilePickerConstants.REQUEST_CODE;
+import static dk.nodes.filepicker.FilePickerConstants.RESULT_CODE_FAILURE;
 import static dk.nodes.filepicker.FilePickerConstants.TYPE;
 import static dk.nodes.filepicker.FilePickerConstants.URI;
 import static dk.nodes.filepicker.permissionHelper.FilePickerPermissionHelper.askPermission;
@@ -102,7 +103,7 @@ public class FilePickerActivity extends AppCompatActivity {
             setResult(RESULT_CANCELED);
             finish();
         } else {
-            setResult(RESULT_FIRST_USER);
+            setResult(RESULT_CODE_FAILURE);
             finish();
         }
     }
