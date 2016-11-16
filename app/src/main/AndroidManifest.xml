@@ -9,6 +9,7 @@
         <activity
             android:name=".FilePickerActivity"
             android:screenOrientation="portrait"
+            android:exported="true"
             android:theme="@style/Theme.AppCompat.Translucent" />
     </application>
 
