@@ -44,8 +44,11 @@ public class FilePickerUriHelper {
     private static String getFilePath(@NonNull Context context, @NonNull String uriString) {
         String filePath = null;
         Uri uri = Uri.parse(uriString);
+        if (uri == null){
+            return null;
+        }
         // Used the new photos app which uses a different API apparently
-        if (uri != null && uriString.contains("providers.media.documents/")) {
+        if (uriString.contains("providers.media.documents/")) {
             // Will return "image:x*"
             String wholeID = DocumentsContract.getDocumentId(uri);
             // Split at colon, use second item in the array
@@ -62,7 +65,7 @@ public class FilePickerUriHelper {
                 filePath = cursor.getString(columnIndex);
             }
             cursor.close();
-        } else if (uri != null) {
+        } else{
             String[] filePathColumn = {MediaStore.Images.Media.DATA, MediaStore.MediaColumns.DATA};
             Cursor cursor = context.getContentResolver().query(uri, filePathColumn, null, null, null);
             if (cursor == null) {

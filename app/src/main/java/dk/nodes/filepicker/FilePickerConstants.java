@@ -5,7 +5,9 @@ public class FilePickerConstants {
     public final static String CHOOSER_TEXT = "CHOOSER_TEXT";
 
     public final static String URI = "URI";
-
+    /**
+     * INTENT EXTRAS
+     */
     public final static String CAMERA = "CAMERA";
     public final static String FILE = "FILE";
     public final static String TYPE = "TYPE";
