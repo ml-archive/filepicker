@@ -44,10 +44,11 @@ public class FilePickerUriHelper {
     private static String getFilePath(@NonNull Context context, @NonNull String uriString) {
         String filePath = null;
         Uri uri = Uri.parse(uriString);
-        if (uri == null){
+        if (uri == null) {
             return null;
         }
-        // Used the new photos app which uses a different API apparently
+        Cursor cursor;
+        // Used the new photos app which uses a different API
         if (uriString.contains("providers.media.documents/")) {
             // Will return "image:x*"
             String wholeID = DocumentsContract.getDocumentId(uri);
@@ -56,7 +57,7 @@ public class FilePickerUriHelper {
             String[] column = {MediaStore.Images.Media.DATA};
             // where id is equal to
             String sel = MediaStore.Images.Media._ID + "=?";
-            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column, sel, new String[]{id}, null);
+            cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column, sel, new String[]{id}, null);
             if (cursor == null) {
                 return null;
             }
@@ -65,9 +66,9 @@ public class FilePickerUriHelper {
                 filePath = cursor.getString(columnIndex);
             }
             cursor.close();
-        } else{
+        } else {
             String[] filePathColumn = {MediaStore.Images.Media.DATA, MediaStore.MediaColumns.DATA};
-            Cursor cursor = context.getContentResolver().query(uri, filePathColumn, null, null, null);
+            cursor = context.getContentResolver().query(uri, filePathColumn, null, null, null);
             if (cursor == null) {
                 return null;
             }

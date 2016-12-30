@@ -1,5 +1,6 @@
 package dk.nodes.filepicker.intentHelper;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 
 public class FilePickerFileIntent {
@@ -13,6 +14,7 @@ public class FilePickerFileIntent {
         intent.setType(type);
     }
 
+    @TargetApi(19)
     public static void setTypes(Intent intent, String[] types) {
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_MIME_TYPES, types);

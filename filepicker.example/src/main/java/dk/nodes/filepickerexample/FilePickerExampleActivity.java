@@ -83,7 +83,7 @@ public class FilePickerExampleActivity extends AppCompatActivity {
                 uriIv.setImageURI(FilePickerUriHelper.getUri(data));
                 Glide.with(this).load(FilePickerUriHelper.getUri(data)).into(glideIv);
                 File file = FilePickerUriHelper.getFile(this, data);
-                if (file == null){
+                if (file == null) {
                     return;
                 }
                 fileIv.setImageURI(Uri.fromFile(file));
