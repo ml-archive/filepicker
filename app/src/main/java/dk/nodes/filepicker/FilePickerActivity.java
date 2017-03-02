@@ -6,6 +6,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.nfc.Tag;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -107,6 +109,21 @@ public class FilePickerActivity extends AppCompatActivity {
                 }
 
                 Uri uri = Uri.parse(uriString);
+
+                // Android 4.4 throws:
+                // java.lang.SecurityException: Permission Denial: opening provider com.android.providers.media.MediaDocumentsProvider
+                // So we do this
+                try {
+                    grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                    }
+                } catch (Exception e) {
+                    if(BuildConfig.DEBUG) {
+                        Log.e("", e.toString());
+                    }
+                }
 
                 if (Paths.isGooglePhotosUri(uri)) {
                     new GetPhotosTask(this, uri, new GetPhotosTask.PhotosListener() {
