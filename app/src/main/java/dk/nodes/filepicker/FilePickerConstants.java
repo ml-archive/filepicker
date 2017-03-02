@@ -8,6 +8,7 @@ public class FilePickerConstants {
     /**
      * INTENT EXTRAS
      */
+    public final static String DOWNLOAD_IF_NON_LOCAL = "DOWNLOAD_IF_NON_LOCAL";
     public final static String CAMERA = "CAMERA";
     public final static String FILE = "FILE";
     public final static String TYPE = "TYPE";

@@ -5,17 +5,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static dk.nodes.filepicker.FilePickerConstants.URI;
 
 public class FilePickerUriHelper {
 
     public static String getUriString(@NonNull Intent intent) {
+        if(intent.getData() != null) {
+            return intent.getData().toString();
+        }
+
         return intent.getExtras().getString(URI);
     }
 
@@ -42,11 +49,21 @@ public class FilePickerUriHelper {
 
     @TargetApi(19)
     private static String getFilePath(@NonNull Context context, @NonNull String uriString) {
+        File fileCheck = new File(uriString);
+        if(fileCheck.exists()) {
+            return uriString;
+        }
+
         String filePath = null;
         Uri uri = Uri.parse(uriString);
         if (uri == null) {
             return null;
         }
+
+        if(new File(uri.getPath()).exists()) {
+            return uri.getPath();
+        }
+
         Cursor cursor;
         // Used the new photos app which uses a different API
         if (uriString.contains("providers.media.documents/")) {
@@ -78,5 +95,13 @@ public class FilePickerUriHelper {
             cursor.close();
         }
         return filePath;
+    }
+
+    public static Uri makeImageUri() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
+        String fileName = dateFormat.format(new Date()) + ".jpg";
+        File photo = new File(Environment.getExternalStorageDirectory(), fileName);
+        Uri outputUri = Uri.fromFile(photo);
+        return outputUri;
     }
 }

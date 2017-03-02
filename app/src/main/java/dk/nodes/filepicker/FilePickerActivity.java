@@ -3,10 +3,13 @@ package dk.nodes.filepicker;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,9 +20,14 @@ import dk.nodes.filepicker.bitmapHelper.FilePickerBitmapHelper;
 import dk.nodes.filepicker.intentHelper.FilePickerCameraIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerChooserIntent;
 import dk.nodes.filepicker.intentHelper.FilePickerFileIntent;
+import dk.nodes.filepicker.tasks.GetFileTask;
+import dk.nodes.filepicker.tasks.GetGoogleDriveFileTask;
+import dk.nodes.filepicker.tasks.GetPhotosTask;
+import dk.nodes.filepicker.utils.Paths;
 
 import static dk.nodes.filepicker.FilePickerConstants.CAMERA;
 import static dk.nodes.filepicker.FilePickerConstants.CHOOSER_TEXT;
+import static dk.nodes.filepicker.FilePickerConstants.DOWNLOAD_IF_NON_LOCAL;
 import static dk.nodes.filepicker.FilePickerConstants.FILE;
 import static dk.nodes.filepicker.FilePickerConstants.MULTIPLE_TYPES;
 import static dk.nodes.filepicker.FilePickerConstants.PERMISSION_REQUEST_CODE;
@@ -35,6 +43,7 @@ public class FilePickerActivity extends AppCompatActivity {
     Uri outputFileUri;
 
     String chooserText = "Choose an action";
+    private boolean download;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +51,9 @@ public class FilePickerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_file_picker);
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(CHOOSER_TEXT)) {
             chooserText = getIntent().getStringExtra(CHOOSER_TEXT);
+        }
+        if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(DOWNLOAD_IF_NON_LOCAL)) {
+            download = getIntent().getBooleanExtra(DOWNLOAD_IF_NON_LOCAL, true);
         }
         if (requirePermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA)) {
             askPermission(this, PERMISSION_REQUEST_CODE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA);
@@ -73,31 +85,134 @@ public class FilePickerActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_CODE) {
-                String uri = null;
+                String uriString = null;
                 if (data != null && data.getData() != null) {
-                    uri = data.getData().toString();
+                    uriString = data.getData().toString();
                 } else if (outputFileUri != null) {
-                    uri = outputFileUri.toString();
+                    uriString = outputFileUri.toString();
                 } else if (data != null && data.getExtras() != null && data.getExtras().get("data") != null) {
-                    uri = data.getExtras().get("data").toString();
+                    uriString = data.getExtras().get("data").toString();
                     try {
                         File file = FilePickerBitmapHelper.writeBitmap(this, (Bitmap) data.getExtras().get("data"), false);
-                        uri = Uri.fromFile(file).toString();
+                        uriString = Uri.fromFile(file).toString();
                     } catch (Exception e) {
                         Log.e("FilePickerActivity", e.toString());
                     }
                 }
 
-                if (uri == null) {
+                if (uriString == null) {
                     setResult(RESULT_FIRST_USER);
                     finish();
                     return;
                 }
 
-                Intent intent = new Intent();
-                intent.putExtra(URI, uri);
-                setResult(RESULT_OK, intent);
-                finish();
+                Uri uri = Uri.parse(uriString);
+
+                if (Paths.isGooglePhotosUri(uri)) {
+                    new GetPhotosTask(this, uri, new GetPhotosTask.PhotosListener() {
+                        @Override
+                        public void didDownloadBitmap(String path) {
+                            Intent intent = new Intent();
+                            intent.putExtra(URI, path);
+                            setResult(RESULT_OK, intent);
+                            finish();
+                        }
+
+                        @Override
+                        public void didFail() {
+                            setResult(RESULT_FIRST_USER);
+                            finish();
+                            return;
+                        }
+                    }).execute();
+                } else if (Paths.isGoogleDocumentsUri(uri)) {
+                    String id = uri.getLastPathSegment().split(":")[1];
+                    boolean isVideo = uri.getLastPathSegment().split(":")[0].contains("video");
+                    final String[] imageColumns = {MediaStore.Images.Media.DATA};
+                    final String[] videoColumns = {MediaStore.Video.Media.DATA};
+                    final String imageOrderBy = null;
+                    Uri baseUri;
+                    String state = Environment.getExternalStorageState();
+                    if (! isVideo) {
+                        if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+                            baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+                        } else {
+                            baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                        }
+                    } else {
+                        if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+                            baseUri = MediaStore.Video.Media.INTERNAL_CONTENT_URI;
+                        } else {
+                            baseUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                        }
+                    }
+
+                    String selectedPath = "path";
+                    Cursor cursor = null;
+                    if (! isVideo) {
+                        cursor = getContentResolver().query(baseUri, imageColumns,
+                                MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
+                    } else {
+                        cursor = getContentResolver().query(baseUri, videoColumns,
+                                MediaStore.Video.Media._ID + "=" + id, null, imageOrderBy);
+                    }
+
+                    if (cursor.moveToFirst()) {
+                        if (! isVideo) {
+                            selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+                        } else {
+                            selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
+                        }
+                    }
+
+                    Intent intent = new Intent();
+                    intent.putExtra(URI, Uri.parse(selectedPath));
+                    setResult(RESULT_OK, intent);
+                    finish();
+
+                } else if (Paths.isGoogleMediaUri(uri)) {
+
+                    new GetFileTask(this, uri, new GetFileTask.TaskListener() {
+                        @Override
+                        public void didSucceed(String newPath) {
+                            Intent intent = new Intent();
+                            intent.putExtra(URI, newPath);
+                            setResult(RESULT_OK, intent);
+                            finish();
+                        }
+
+                        @Override
+                        public void didFail() {
+                            setResult(RESULT_FIRST_USER);
+                            finish();
+                            return;
+                        }
+                    }).execute();
+                } else if (Paths.isGoogleDrive(uri)) {
+                    new GetGoogleDriveFileTask(this, uri, new GetGoogleDriveFileTask.TaskListener() {
+                        @Override
+                        public void didSucceed(String newPath) {
+                            Intent intent = new Intent();
+                            intent.putExtra(URI, newPath);
+                            setResult(RESULT_OK, intent);
+                            finish();
+                        }
+
+                        @Override
+                        public void didFail() {
+                            setResult(RESULT_FIRST_USER);
+                            finish();
+                            return;
+                        }
+                    }).execute();
+                } else {
+                    Intent intent = new Intent();
+                    intent.putExtra(URI, uriString);
+                    setResult(RESULT_OK, intent);
+                    finish();
+                }
+
+
             }
         } else if (resultCode == RESULT_CANCELED) {
             setResult(RESULT_CANCELED);
