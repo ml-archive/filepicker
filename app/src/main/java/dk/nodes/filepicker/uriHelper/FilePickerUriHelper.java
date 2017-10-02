@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -64,18 +65,30 @@ public class FilePickerUriHelper {
             return uri.getPath();
         }
 
-        Cursor cursor;
+        Cursor cursor = null;
         // Used the new photos app which uses a different API
         if (uriString.contains("providers.media.documents/")) {
             // Will return "image:x*"
             String wholeID = DocumentsContract.getDocumentId(uri);
             // Split at colon, use second item in the array
             String id = wholeID.split(":")[1];
-            String[] column = {MediaStore.Images.Media.DATA};
-            // where id is equal to
-            String sel = MediaStore.Images.Media._ID + "=?";
-            cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column, sel, new String[]{id}, null);
-            if (cursor == null) {
+            String[] column = null;
+            if(wholeID.contains("image")) {
+                String[] iColumn = {MediaStore.Images.Media.DATA};
+                // where id is equal to
+                String sel = MediaStore.Images.Media._ID + "=?";
+                cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, iColumn, sel, new String[]{id}, null);
+                column = iColumn;
+            }
+            else if(wholeID.contains("video")) {
+                String[] vColumn = {MediaStore.Video.Media.DATA};
+                // where id is equal to
+                String videoSel = MediaStore.Video.Media._ID + "=?";
+                cursor = context.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, vColumn, videoSel, new String[]{id}, null);
+                column = vColumn;
+            }
+
+            if (cursor == null) { // nor video
                 return null;
             }
             int columnIndex = cursor.getColumnIndex(column[0]);

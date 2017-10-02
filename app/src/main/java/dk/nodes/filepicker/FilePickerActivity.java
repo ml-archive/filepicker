@@ -258,7 +258,17 @@ public class FilePickerActivity extends AppCompatActivity {
         } else {
             //We assume its an image since developer didn't specify anything and we will show chooser with Camera, File explorers (including gdrive, dropbox...)
             outputFileUri = FilePickerCameraIntent.setUri(this);
-            intent = FilePickerChooserIntent.chooserIntent(chooserText, outputFileUri);
+
+            if (null != getIntent().getStringArrayExtra(MULTIPLE_TYPES)) {
+                //User can specify multiple types for the intent.
+                intent = FilePickerChooserIntent.chooserMultiIntent(chooserText, outputFileUri, getIntent().getStringArrayExtra(MULTIPLE_TYPES));
+            } else if (null != getIntent().getStringExtra(TYPE)) {
+                //If no types defaults to image files, if just 1 type applies type
+                intent = FilePickerChooserIntent.chooserSingleIntent(chooserText, outputFileUri, getIntent().getStringExtra(TYPE));
+            }
+            else {
+                intent = FilePickerChooserIntent.chooserIntent(chooserText, outputFileUri);
+            }
         }
 
         if (intent.resolveActivity(getPackageManager()) != null) {
