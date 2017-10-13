@@ -1,6 +1,7 @@
 package dk.nodes.filepicker.uriHelper;
 
 import android.annotation.TargetApi;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -103,5 +105,21 @@ public class FilePickerUriHelper {
         File photo = new File(Environment.getExternalStorageDirectory(), fileName);
         Uri outputUri = Uri.fromFile(photo);
         return outputUri;
+    }
+
+    public static String getFileType(Context context, Uri uri) {
+        try {
+            String mimeType = context.getContentResolver().getType(uri);
+            String extension;
+            if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+                final MimeTypeMap mime = MimeTypeMap.getSingleton();
+                extension = mime.getExtensionFromMimeType(mimeType);
+            } else {
+                extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
+            }
+            return extension;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

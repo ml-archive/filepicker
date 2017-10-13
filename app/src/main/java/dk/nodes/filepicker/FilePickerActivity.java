@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -17,6 +16,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.Random;
 
 import dk.nodes.filepicker.bitmapHelper.FilePickerBitmapHelper;
 import dk.nodes.filepicker.intentHelper.FilePickerCameraIntent;
@@ -25,8 +28,10 @@ import dk.nodes.filepicker.intentHelper.FilePickerFileIntent;
 import dk.nodes.filepicker.tasks.GetFileTask;
 import dk.nodes.filepicker.tasks.GetGoogleDriveFileTask;
 import dk.nodes.filepicker.tasks.GetPhotosTask;
+import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 import dk.nodes.filepicker.utils.Paths;
 
+import static android.R.attr.path;
 import static dk.nodes.filepicker.FilePickerConstants.CAMERA;
 import static dk.nodes.filepicker.FilePickerConstants.CHOOSER_TEXT;
 import static dk.nodes.filepicker.FilePickerConstants.DOWNLOAD_IF_NON_LOCAL;
@@ -187,6 +192,31 @@ public class FilePickerActivity extends AppCompatActivity {
                     setResult(RESULT_OK, intent);
                     finish();
 
+                } else if(Paths.isContentProviderUri(uri)) {
+                    try {
+                        InputStream inputStream = getContentResolver().openInputStream(uri);
+                        String fileExtension = FilePickerUriHelper.getFileType(this, uri);
+
+                        File filesDir = getCacheDir();
+                        File file = new File(filesDir, "f"+ String.format("%04d", new Random().nextInt(10000))+"."+fileExtension);
+                        if(!file.exists()) {
+                            file.createNewFile();
+                        }
+                        FileOutputStream fileOutputStream = new FileOutputStream(file);
+                        int bufferSize = 1024;
+                        byte[] buffer = new byte[bufferSize];
+                        int len = 0;
+                        while ((len = inputStream.read(buffer)) != - 1) {
+                            fileOutputStream.write(buffer, 0, len);
+                        }
+
+                        Intent intent = new Intent();
+                        intent.putExtra(URI, file.getAbsolutePath());
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    } catch (Exception e) {
+                        Log.e("", e.toString());
+                    }
                 } else if (Paths.isGoogleMediaUri(uri)) {
 
                     new GetFileTask(this, uri, new GetFileTask.TaskListener() {

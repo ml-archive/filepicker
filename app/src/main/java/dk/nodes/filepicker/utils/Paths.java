@@ -57,4 +57,8 @@ public class Paths {
     public static boolean isGoogleDocumentsUri(Uri uri) {
         return "com.google.android.providers.media.documents".equals(uri.getAuthority());
     }
+
+    public static boolean isContentProviderUri(Uri uri) {
+        return "content".equalsIgnoreCase(uri.getScheme());
+    }
 }
