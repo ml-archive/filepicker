@@ -15,6 +15,10 @@ def _group = 'dk.nodes.filepicker'
 def _version = '1.9'
 def _archivesBaseName = 'filepicker'
 
+nexusStaging {
+    packageGroup = "dk.nodes"
+}
+
 def _name = 'FilePicker Library'
 def _description = 'Various tools used in android app development.'
 
