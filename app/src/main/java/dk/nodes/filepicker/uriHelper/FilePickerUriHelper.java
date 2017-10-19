@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
@@ -123,14 +124,28 @@ public class FilePickerUriHelper {
         try {
             String mimeType = context.getContentResolver().getType(uri);
             String extension;
+            Log.e("DEBUG", "uri: " + uri.toString());
+            if(uri.getScheme() == null)
+            {
+                Log.e("DEBUG", "Uri.scheme == null");
+            }
             if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+                Log.e("DEBUG", "mime.getExtensionFromMimeType: " + mimeType);
+                // WORKAROUND: we got a device with a buggy cam app that sets the incorrect mimetype, correct it
+                if("image/jpg".contentEquals(mimeType))
+                {
+                    mimeType = "image/jpeg";
+                }
                 final MimeTypeMap mime = MimeTypeMap.getSingleton();
                 extension = mime.getExtensionFromMimeType(mimeType);
+                Log.e("DEBUG", "extension: " + extension);
             } else {
+                Log.e("DEBUG", "MimeTypeMap.getFileExtensionFromUrl");
                 extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
             }
             return extension;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
