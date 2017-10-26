@@ -34,7 +34,6 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
 
     @Override
     protected String doInBackground(Void... params) {
-        Log.i(TAG, "Shit is happening in the background now !");
         Log.i(TAG, "Google drive: " + uri.toString());
         Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
         File outputFile = null;

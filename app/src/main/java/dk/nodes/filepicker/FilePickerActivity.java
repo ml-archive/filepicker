@@ -1,6 +1,7 @@
 package dk.nodes.filepicker;
 
 import android.Manifest;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,6 +16,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,6 +52,7 @@ import static dk.nodes.filepicker.permissionHelper.FilePickerPermissionHelper.re
 public class FilePickerActivity extends AppCompatActivity {
 
     Uri outputFileUri;
+    FrameLayout rootFl;
 
     String chooserText = "Choose an action";
     private boolean download;
@@ -57,6 +61,7 @@ public class FilePickerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_picker);
+        rootFl = (FrameLayout) findViewById(R.id.rootFl);
         if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(CHOOSER_TEXT)) {
             chooserText = getIntent().getStringExtra(CHOOSER_TEXT);
         }
@@ -114,6 +119,8 @@ public class FilePickerActivity extends AppCompatActivity {
                     return;
                 }
 
+                Log.e("DEBUG", "Original URI = " + uriString);
+
                 Uri uri = Uri.parse(uriString);
 
                 // Android 4.4 throws:
@@ -132,9 +139,11 @@ public class FilePickerActivity extends AppCompatActivity {
                 }
 
                 if (Paths.isGooglePhotosUri(uri)) {
+                    showProgress();
                     new GetPhotosTask(this, uri, new GetPhotosTask.PhotosListener() {
                         @Override
                         public void didDownloadBitmap(String path) {
+                            hideProgress();
                             Intent intent = new Intent();
                             intent.putExtra(URI, path);
                             setResult(RESULT_OK, intent);
@@ -143,6 +152,7 @@ public class FilePickerActivity extends AppCompatActivity {
 
                         @Override
                         public void didFail() {
+                            hideProgress();
                             setResult(RESULT_FIRST_USER);
                             finish();
                             return;
@@ -193,10 +203,87 @@ public class FilePickerActivity extends AppCompatActivity {
                     setResult(RESULT_OK, intent);
                     finish();
 
-                } else if(Paths.isContentProviderUri(uri)) {
+                }  else if (Paths.isGoogleMediaUri(uri)) {
+                    showProgress();
+                    new GetFileTask(this, uri, new GetFileTask.TaskListener() {
+                        @Override
+                        public void didSucceed(String newPath) {
+                            hideProgress();
+                            Intent intent = new Intent();
+                            intent.putExtra(URI, newPath);
+                            setResult(RESULT_OK, intent);
+                            finish();
+                        }
+
+                        @Override
+                        public void didFail() {
+                            hideProgress();
+                            setResult(RESULT_FIRST_USER);
+                            finish();
+                            return;
+                        }
+                    }).execute();
+                } else if (Paths.isGoogleDrive(uri)) {
+                    showProgress();
+                    new GetGoogleDriveFileTask(getBaseContext(), uri, new GetGoogleDriveFileTask.TaskListener() {
+                        @Override
+                        public void didSucceed(String newPath) {
+                            hideProgress();
+                            Intent intent = new Intent();
+                            intent.putExtra(URI, newPath);
+                            setResult(RESULT_OK, intent);
+                            finish();
+                        }
+
+                        @Override
+                        public void didFail() {
+                            hideProgress();
+                            setResult(RESULT_FIRST_USER);
+                            finish();
+                            return;
+                        }
+                    }).execute();
+                }
+                else if(Paths.isContentProviderUri(uri)) {
                     try {
 
                         String filename = getFilenameFromMediaProvider(uri);
+                        // try alternative method
+                        if(filename == null)
+                        {
+                            String id = uri.getLastPathSegment();
+                            Log.e("DEBUG", "mediastore id " + id);
+                            try {
+                                filename = getFilenameFromMediaStore(id);
+                            }
+                            catch(Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+                        if(filename == null && Paths.isDownloadProviderUri(uri))
+                        {
+                            String id = uri.getLastPathSegment();
+                            Log.e("DEBUG", "download manager id " + id);
+                            try {
+                                filename = getFilenameFromDownloadProvider(Long.parseLong(id));
+                            }
+                            catch(Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+                        if(filename == null)
+                        {
+                            String last = uri.getLastPathSegment();
+                            if(last != null)
+                            {
+                                if(isValidFilename(last))
+                                {
+                                    filename = last;
+                                }
+                            }
+                        }
                         InputStream inputStream = getContentResolver().openInputStream(uri);
                         String fileExtension = FilePickerUriHelper.getFileType(this, uri);
                         Log.e("DEBUG", "fileExtension from contentprovider url is " + fileExtension);
@@ -209,7 +296,11 @@ public class FilePickerActivity extends AppCompatActivity {
                         }
                         else
                         {
-                            file = new File(filesDir, filename + "." + fileExtension);
+                            if(!filename.contains("."))
+                                file = new File(filesDir, filename + "." + fileExtension);
+                            else
+                                file = new File(filesDir, filename);
+
                         }
                         if (!file.exists()) {
                             file.createNewFile();
@@ -231,49 +322,13 @@ public class FilePickerActivity extends AppCompatActivity {
                         e.printStackTrace();
                         Log.e("", e.toString());
                     }
-                } else if (Paths.isGoogleMediaUri(uri)) {
-
-                    new GetFileTask(this, uri, new GetFileTask.TaskListener() {
-                        @Override
-                        public void didSucceed(String newPath) {
-                            Intent intent = new Intent();
-                            intent.putExtra(URI, newPath);
-                            setResult(RESULT_OK, intent);
-                            finish();
-                        }
-
-                        @Override
-                        public void didFail() {
-                            setResult(RESULT_FIRST_USER);
-                            finish();
-                            return;
-                        }
-                    }).execute();
-                } else if (Paths.isGoogleDrive(uri)) {
-                    new GetGoogleDriveFileTask(this, uri, new GetGoogleDriveFileTask.TaskListener() {
-                        @Override
-                        public void didSucceed(String newPath) {
-                            Intent intent = new Intent();
-                            intent.putExtra(URI, newPath);
-                            setResult(RESULT_OK, intent);
-                            finish();
-                        }
-
-                        @Override
-                        public void didFail() {
-                            setResult(RESULT_FIRST_USER);
-                            finish();
-                            return;
-                        }
-                    }).execute();
-                } else {
+                }
+                else {
                     Intent intent = new Intent();
                     intent.putExtra(URI, uriString);
                     setResult(RESULT_OK, intent);
                     finish();
                 }
-
-
             }
         } else if (resultCode == RESULT_CANCELED) {
             setResult(RESULT_CANCELED);
@@ -282,6 +337,78 @@ public class FilePickerActivity extends AppCompatActivity {
             setResult(RESULT_CODE_FAILURE);
             finish();
         }
+    }
+
+    final String[] ReservedChars = {"|", "\\", "?", "*", "<", "\"", ":", ">"};
+    private boolean isValidFilename(String name)
+    {
+        for(String c :ReservedChars){
+
+            if(name.indexOf(c) > 0)
+                return false;
+        }
+        return true;
+    }
+
+    private String getFilenameFromDownloadProvider(long id)
+    {
+        DownloadManager downloadManager = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
+        DownloadManager.Query downloadQuery = new DownloadManager.Query();
+        //set the query filter to our previously Enqueued download
+        downloadQuery.setFilterById(id);
+
+        //Query the download manager about downloads that have been requested.
+        Cursor cursor = downloadManager.query(downloadQuery);
+        if(cursor.moveToFirst()) {
+            Log.e("debug", "cursour colums=" + cursor.getColumnCount());
+            //get the download filename
+            int filenameIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME);
+            String filename = cursor.getString(filenameIndex);
+            cursor.close();
+            return filename;
+        }
+        else
+        {
+            Log.e("DEBUG", "empty cursor");
+            return null;
+        }
+    }
+
+    private String getFilenameFromMediaStore(String id)
+    {
+        if(id == null)
+            return null;
+        final String[] imageColumns = {MediaStore.Images.Media.DATA};
+        final String imageOrderBy = null;
+        Uri baseUri;
+        String state = Environment.getExternalStorageState();
+        if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+            baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+        } else {
+            baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        }
+
+        String selectedPath = null;
+        Cursor cursor = null;
+
+        cursor = getContentResolver().query(baseUri, imageColumns, MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
+
+        if (cursor.moveToFirst()) {
+            selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        }
+        cursor.close();
+        if(selectedPath != null)
+        {
+            if(selectedPath.contains("/"))
+            {
+                String[] parts = selectedPath.split("/");
+                if(parts.length > 0)
+                {
+                    selectedPath = parts[parts.length-1];
+                }
+            }
+        }
+        return selectedPath;
     }
 
     private String getFilenameFromMediaProvider(Uri uri)
@@ -386,5 +513,15 @@ public class FilePickerActivity extends AppCompatActivity {
             setResult(RESULT_FIRST_USER);
             finish();
         }
+    }
+
+    void showProgress()
+    {
+        rootFl.setVisibility(View.VISIBLE);
+    }
+
+    void hideProgress()
+    {
+        rootFl.setVisibility(View.GONE);
     }
 }
