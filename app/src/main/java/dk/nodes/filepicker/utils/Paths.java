@@ -15,6 +15,11 @@ public class Paths {
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
 
+    public static boolean isDropboxFilecache(Uri uri)
+    {
+        return "com.dropbox.android.FileCache".equals(uri.getAuthority());
+    }
+
     public static boolean isGoogleDrive(Uri uri) {
         return "com.google.android.apps.docs.storage".equals(uri.getAuthority())
                 || "com.google.android.apps.docs.files".equals(uri.getAuthority())

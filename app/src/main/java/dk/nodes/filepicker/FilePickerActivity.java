@@ -16,6 +16,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -40,6 +41,7 @@ import dk.nodes.filepicker.tasks.GetPhotosTask;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 import dk.nodes.filepicker.utils.Paths;
 
+import static android.R.attr.disabledAlpha;
 import static android.R.attr.path;
 import static dk.nodes.filepicker.BuildConfig.DEBUG;
 import static dk.nodes.filepicker.FilePickerConstants.CAMERA;
@@ -262,7 +264,13 @@ public class FilePickerActivity extends AppCompatActivity {
                     try {
                         String filename = null;
 
-                        if(Paths.isExternalStorageDocument(uri) && (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT))
+                        if(Paths.isDropboxFilecache(uri))
+                        {
+                            Log.e("DEBUG", "Uri is dropbox filecache");
+                            filename = getSAFDisplayName(uri);
+                        }
+
+                        if(Paths.isExternalStorageDocument(uri) && (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) && filename == null)
                         {
                             Log.e("DEBUG", "isExternalStorageDocument");
                             final String docId;
@@ -275,7 +283,8 @@ public class FilePickerActivity extends AppCompatActivity {
                             }
 
                         }
-                        else
+
+                        if(filename == null)
                             filename = getFilenameFromMediaProvider(uri);
                         // try alternative method
                         if(filename == null)
@@ -312,6 +321,10 @@ public class FilePickerActivity extends AppCompatActivity {
                             {
                                 e.printStackTrace();
                             }
+                        }
+                        if(filename == null)
+                        {
+                            filename = getSAFDisplayName(uri);
                         }
                         if(filename == null)
                         {
@@ -520,6 +533,7 @@ public class FilePickerActivity extends AppCompatActivity {
         return selectedPath;
     }
 
+
     private String getFilenameFromMediaStore(String id)
     {
         if(id == null)
@@ -648,4 +662,38 @@ public class FilePickerActivity extends AppCompatActivity {
         }
         return selectedPath;
     }
+
+    private String getSAFDisplayName(Uri uri) {
+
+        // The query, since it only applies to a single document, will only return
+        // one row. There's no need to filter, sort, or select fields, since we want
+        // all fields for one document.
+        Cursor cursor = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            cursor = getContentResolver().query(uri, null, null, null, null, null);
+        }
+
+        try {
+            // moveToFirst() returns false if the cursor has 0 rows.  Very handy for
+            // "if there's anything to look at, look at it" conditionals.
+            if (cursor != null && cursor.moveToFirst()) {
+
+                // Note it's called "Display Name".  This is
+                // provider-specific, and might not necessarily be the file name.
+                String displayName = cursor.getString(
+                        cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                //Log.e("DEBUG", "Display Name: " + displayName);
+                return displayName;
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            cursor.close();
+        }
+        return null;
+    }
+
 }
