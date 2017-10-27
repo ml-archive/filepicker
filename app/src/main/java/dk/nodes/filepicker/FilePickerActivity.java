@@ -2,16 +2,19 @@ package dk.nodes.filepicker;
 
 import android.Manifest;
 import android.app.DownloadManager;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -22,7 +25,9 @@ import android.widget.FrameLayout;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 import dk.nodes.filepicker.bitmapHelper.FilePickerBitmapHelper;
@@ -36,6 +41,7 @@ import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 import dk.nodes.filepicker.utils.Paths;
 
 import static android.R.attr.path;
+import static dk.nodes.filepicker.BuildConfig.DEBUG;
 import static dk.nodes.filepicker.FilePickerConstants.CAMERA;
 import static dk.nodes.filepicker.FilePickerConstants.CHOOSER_TEXT;
 import static dk.nodes.filepicker.FilePickerConstants.DOWNLOAD_IF_NON_LOCAL;
@@ -133,12 +139,13 @@ public class FilePickerActivity extends AppCompatActivity {
                         getContentResolver().takePersistableUriPermission(uri, takeFlags);
                     }
                 } catch (Exception e) {
-                    if(BuildConfig.DEBUG) {
+                    if(DEBUG) {
                         Log.e("", e.toString());
                     }
                 }
 
-                if (Paths.isGooglePhotosUri(uri)) {
+                if (Paths.isGooglePhotosUri(uri))
+                {
                     showProgress();
                     new GetPhotosTask(this, uri, new GetPhotosTask.PhotosListener() {
                         @Override
@@ -158,7 +165,9 @@ public class FilePickerActivity extends AppCompatActivity {
                             return;
                         }
                     }).execute();
-                } else if (Paths.isGoogleDocumentsUri(uri)) {
+                }
+                else if (Paths.isGoogleDocumentsUri(uri))
+                {
                     String id = uri.getLastPathSegment().split(":")[1];
                     boolean isVideo = uri.getLastPathSegment().split(":")[0].contains("video");
                     final String[] imageColumns = {MediaStore.Images.Media.DATA};
@@ -203,7 +212,9 @@ public class FilePickerActivity extends AppCompatActivity {
                     setResult(RESULT_OK, intent);
                     finish();
 
-                }  else if (Paths.isGoogleMediaUri(uri)) {
+                }
+                else if (Paths.isGoogleMediaUri(uri))
+                {
                     showProgress();
                     new GetFileTask(this, uri, new GetFileTask.TaskListener() {
                         @Override
@@ -223,7 +234,9 @@ public class FilePickerActivity extends AppCompatActivity {
                             return;
                         }
                     }).execute();
-                } else if (Paths.isGoogleDrive(uri)) {
+                }
+                else if (Paths.isGoogleDrive(uri))
+                {
                     showProgress();
                     new GetGoogleDriveFileTask(getBaseContext(), uri, new GetGoogleDriveFileTask.TaskListener() {
                         @Override
@@ -244,10 +257,26 @@ public class FilePickerActivity extends AppCompatActivity {
                         }
                     }).execute();
                 }
-                else if(Paths.isContentProviderUri(uri)) {
+                else if(Paths.isContentProviderUri(uri))
+                {
                     try {
+                        String filename = null;
 
-                        String filename = getFilenameFromMediaProvider(uri);
+                        if(Paths.isExternalStorageDocument(uri) && (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT))
+                        {
+                            Log.e("DEBUG", "isExternalStorageDocument");
+                            final String docId;
+                            docId = DocumentsContract.getDocumentId(uri);
+                            final String[] split = docId.split(":");
+                            final String type = split[0];
+
+                            if ("primary".equalsIgnoreCase(type)) {
+                                filename = getLastSegmentString(Environment.getExternalStorageDirectory() + "/" + split[1]);
+                            }
+
+                        }
+                        else
+                            filename = getFilenameFromMediaProvider(uri);
                         // try alternative method
                         if(filename == null)
                         {
@@ -255,16 +284,27 @@ public class FilePickerActivity extends AppCompatActivity {
                             Log.e("DEBUG", "mediastore id " + id);
                             try {
                                 filename = getFilenameFromMediaStore(id);
+                                //if(FilePickerCameraIntent.isCamera)
+                                //{
+                                    try {
+                                        long ts = Long.parseLong(stripExtension(filename));
+                                        filename = generateDCIMFilename("IMG", ts);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                //}
                             }
                             catch(Exception e)
                             {
                                 e.printStackTrace();
                             }
                         }
-                        if(filename == null && Paths.isDownloadProviderUri(uri))
+                        if(filename == null && Paths.isDownloadsDocument(uri))
                         {
                             String id = uri.getLastPathSegment();
-                            Log.e("DEBUG", "download manager id " + id);
+                            Log.e("DEBUG", "Trying public download id " + id);
                             try {
                                 filename = getFilenameFromDownloadProvider(Long.parseLong(id));
                             }
@@ -323,7 +363,8 @@ public class FilePickerActivity extends AppCompatActivity {
                         Log.e("", e.toString());
                     }
                 }
-                else {
+                else
+                {
                     Intent intent = new Intent();
                     intent.putExtra(URI, uriString);
                     setResult(RESULT_OK, intent);
@@ -339,144 +380,15 @@ public class FilePickerActivity extends AppCompatActivity {
         }
     }
 
-    final String[] ReservedChars = {"|", "\\", "?", "*", "<", "\"", ":", ">"};
-    private boolean isValidFilename(String name)
-    {
-        for(String c :ReservedChars){
-
-            if(name.indexOf(c) > 0)
-                return false;
-        }
-        return true;
-    }
-
-    private String getFilenameFromDownloadProvider(long id)
-    {
-        DownloadManager downloadManager = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
-        DownloadManager.Query downloadQuery = new DownloadManager.Query();
-        //set the query filter to our previously Enqueued download
-        downloadQuery.setFilterById(id);
-
-        //Query the download manager about downloads that have been requested.
-        Cursor cursor = downloadManager.query(downloadQuery);
-        if(cursor.moveToFirst()) {
-            Log.e("debug", "cursour colums=" + cursor.getColumnCount());
-            //get the download filename
-            int filenameIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME);
-            String filename = cursor.getString(filenameIndex);
-            cursor.close();
-            return filename;
-        }
-        else
-        {
-            Log.e("DEBUG", "empty cursor");
-            return null;
-        }
-    }
-
-    private String getFilenameFromMediaStore(String id)
-    {
-        if(id == null)
-            return null;
-        final String[] imageColumns = {MediaStore.Images.Media.DATA};
-        final String imageOrderBy = null;
-        Uri baseUri;
-        String state = Environment.getExternalStorageState();
-        if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
-            baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
-        } else {
-            baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        }
-
-        String selectedPath = null;
-        Cursor cursor = null;
-
-        cursor = getContentResolver().query(baseUri, imageColumns, MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
-
-        if (cursor.moveToFirst()) {
-            selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-        }
-        cursor.close();
-        if(selectedPath != null)
-        {
-            if(selectedPath.contains("/"))
-            {
-                String[] parts = selectedPath.split("/");
-                if(parts.length > 0)
-                {
-                    selectedPath = parts[parts.length-1];
-                }
-            }
-        }
-        return selectedPath;
-    }
-
-    private String getFilenameFromMediaProvider(Uri uri)
-    {
-        if(uri == null)
-            return null;
-        if(!uri.getLastPathSegment().contains(":"))
-            return null;
-        String id = uri.getLastPathSegment().split(":")[1];
-        boolean isVideo = uri.getLastPathSegment().split(":")[0].contains("video");
-        final String[] imageColumns = {MediaStore.Images.Media.DATA};
-        final String[] videoColumns = {MediaStore.Video.Media.DATA};
-        final String imageOrderBy = null;
-        Uri baseUri;
-        String state = Environment.getExternalStorageState();
-        if (! isVideo) {
-            if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
-                baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
-            } else {
-                baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-            }
-        } else {
-            if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
-                baseUri = MediaStore.Video.Media.INTERNAL_CONTENT_URI;
-            } else {
-                baseUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-            }
-        }
-
-        String selectedPath = null;
-        Cursor cursor = null;
-        if (! isVideo) {
-            cursor = getContentResolver().query(baseUri, imageColumns,
-                    MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
-        } else {
-            cursor = getContentResolver().query(baseUri, videoColumns,
-                    MediaStore.Video.Media._ID + "=" + id, null, imageOrderBy);
-        }
-
-        if (cursor.moveToFirst()) {
-            if (! isVideo) {
-                selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-            } else {
-                selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
-            }
-        }
-        cursor.close();
-        if(selectedPath != null)
-        {
-            if(selectedPath.contains("/"))
-            {
-                String[] parts = selectedPath.split("/");
-                if(parts.length > 0)
-                {
-                    selectedPath = parts[parts.length-1];
-                }
-            }
-        }
-        return selectedPath;
-    }
-
     void start() {
         final Intent intent;
         if (getIntent().getBooleanExtra(CAMERA, false)) {
+            FilePickerCameraIntent.isCamera = true;
             outputFileUri = FilePickerCameraIntent.setUri(this);
             intent = FilePickerCameraIntent.cameraIntent(outputFileUri);
         } else if (getIntent().getBooleanExtra(FILE, false)) {
             //Only file
+            FilePickerCameraIntent.isCamera = false;
             intent = FilePickerFileIntent.fileIntent("image/*");
             if (null != getIntent().getStringArrayExtra(MULTIPLE_TYPES)) {
                 //User can specify multiple types for the intent.
@@ -523,5 +435,217 @@ public class FilePickerActivity extends AppCompatActivity {
     void hideProgress()
     {
         rootFl.setVisibility(View.GONE);
+    }
+
+    /**
+     * Get the value of the data column for this Uri. This is useful for
+     * MediaStore Uris, and other file-based ContentProviders.
+     *
+     * @param context The context.
+     * @param uri The Uri to query.
+     * @param selection (Optional) Filter used in the query.
+     * @param selectionArgs (Optional) Selection arguments used in the query.
+     * @return The value of the _data column, which is typically a file path.
+     * @author paulburke
+     */
+    public static String getDataColumn(Context context, Uri uri, String selection,
+                                       String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                if (DEBUG)
+                    DatabaseUtils.dumpCursor(cursor);
+
+                final int column_index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(column_index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
+
+    private String generateDCIMFilename(String prefix, long timestamp)
+    {
+        try {
+            Date d = new Date(timestamp);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_hhmmss", Locale.US);
+            String filename = prefix + "_" + sdf.format(d);
+            return filename;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    final String[] ReservedChars = {"|", "\\", "?", "*", "<", "\"", ":", ">"};
+    private boolean isValidFilename(String name)
+    {
+        for(String c :ReservedChars){
+
+            if(name.indexOf(c) > 0)
+                return false;
+        }
+        return true;
+    }
+
+    private String getFilenameFromDownloadProvider(long id)
+    {
+        final Uri contentUri = ContentUris.withAppendedId(
+                Uri.parse("content://downloads/public_downloads"), id);
+
+        String selectedPath = getDataColumn(getBaseContext(), contentUri, null, null);
+        if(selectedPath != null)
+        {
+            if(selectedPath.contains("/"))
+            {
+                String[] parts = selectedPath.split("/");
+                if(parts.length > 0)
+                {
+                    selectedPath = parts[parts.length-1];
+                }
+            }
+        }
+        return selectedPath;
+    }
+
+    private String getFilenameFromMediaStore(String id)
+    {
+        if(id == null)
+            return null;
+        final String[] imageColumns = {MediaStore.Images.Media.DATA};
+        final String imageOrderBy = null;
+        Uri baseUri;
+        String state = Environment.getExternalStorageState();
+        if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+            baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+        } else {
+            baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        }
+
+        String selectedPath = null;
+        Cursor cursor = null;
+
+        cursor = getContentResolver().query(baseUri, imageColumns, MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
+
+        if (cursor.moveToFirst()) {
+            selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        }
+        cursor.close();
+        if(selectedPath != null)
+        {
+            if(selectedPath.contains("/"))
+            {
+                String[] parts = selectedPath.split("/");
+                if(parts.length > 0)
+                {
+                    selectedPath = parts[parts.length-1];
+                }
+            }
+        }
+        return selectedPath;
+    }
+
+    private String getFilenameFromMediaProvider(Uri uri)
+    {
+        try {
+            if (uri == null)
+                return null;
+            if (!uri.getLastPathSegment().contains(":"))
+                return null;
+            String id = uri.getLastPathSegment().split(":")[1];
+            boolean isVideo = uri.getLastPathSegment().split(":")[0].contains("video");
+            final String[] imageColumns = {MediaStore.Images.Media.DATA};
+            final String[] videoColumns = {MediaStore.Video.Media.DATA};
+            final String imageOrderBy = null;
+            Uri baseUri;
+            String state = Environment.getExternalStorageState();
+            if (!isVideo) {
+                if (!state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+                    baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+                } else {
+                    baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                }
+            } else {
+                if (!state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+                    baseUri = MediaStore.Video.Media.INTERNAL_CONTENT_URI;
+                } else {
+                    baseUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                }
+            }
+
+            String selectedPath = null;
+            Cursor cursor = null;
+            if (!isVideo) {
+                cursor = getContentResolver().query(baseUri, imageColumns,
+                        MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
+            } else {
+                cursor = getContentResolver().query(baseUri, videoColumns,
+                        MediaStore.Video.Media._ID + "=" + id, null, imageOrderBy);
+            }
+
+            if (cursor.moveToFirst()) {
+                if (!isVideo) {
+                    selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+                } else {
+                    selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
+                }
+            }
+            cursor.close();
+            if (selectedPath != null) {
+                if (selectedPath.contains("/")) {
+                    String[] parts = selectedPath.split("/");
+                    if (parts.length > 0) {
+                        selectedPath = parts[parts.length - 1];
+                    }
+                }
+            }
+            return selectedPath;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String stripExtension(String selectedPath)
+    {
+        if(selectedPath != null)
+        {
+            if(selectedPath.contains("."))
+            {
+                String[] parts = selectedPath.split("\\.");
+                if(parts.length > 0)
+                {
+                    selectedPath = parts[0];
+                }
+            }
+        }
+        return selectedPath;
+    }
+
+    private String getLastSegmentString(String selectedPath)
+    {
+        if (selectedPath != null) {
+            if (selectedPath.contains("/")) {
+                String[] parts = selectedPath.split("/");
+                if (parts.length > 0) {
+                    selectedPath = parts[parts.length - 1];
+                }
+            }
+        }
+        return selectedPath;
     }
 }

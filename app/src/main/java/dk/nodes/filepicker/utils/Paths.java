@@ -62,14 +62,4 @@ public class Paths {
         return "content".equalsIgnoreCase(uri.getScheme());
     }
 
-    public static boolean isDownloadProviderUri(Uri uri) {
-        if (uri.getAuthority() != null)
-        {
-            if(uri.getAuthority().contains("com.android.providers.downloads"))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 }
