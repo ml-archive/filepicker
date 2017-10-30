@@ -14,6 +14,10 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -147,6 +151,32 @@ public class FilePickerUriHelper {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public boolean detectPDF(File file) {
+        try {
+            if (file == null)
+                return false;
+            InputStream is = new FileInputStream(file);
+            byte[] buf = new byte[4];
+
+            // 25 50 44 46
+            if(is.read(buf, 0, 4) == 4)
+            {
+                if (buf[0] == 0x25 && buf[1] == 0x50 &&
+                        buf[2] == 0x44 && buf[3] == 0x46) {
+                    is.close();
+                    return true;
+                }
+            }
+            is.close();
+            return false;
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            return false;
         }
     }
 }

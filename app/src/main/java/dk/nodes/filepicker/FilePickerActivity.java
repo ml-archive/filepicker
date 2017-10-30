@@ -146,6 +146,8 @@ public class FilePickerActivity extends AppCompatActivity {
                     }
                 }
 
+                final String mimeType = getContentResolver().getType(uri);
+
                 if (Paths.isGooglePhotosUri(uri))
                 {
                     showProgress();
@@ -154,6 +156,8 @@ public class FilePickerActivity extends AppCompatActivity {
                         public void didDownloadBitmap(String path) {
                             hideProgress();
                             Intent intent = new Intent();
+                            if(mimeType != null)
+                                intent.putExtra("mimeType", mimeType);
                             intent.putExtra(URI, path);
                             setResult(RESULT_OK, intent);
                             finish();
@@ -170,6 +174,7 @@ public class FilePickerActivity extends AppCompatActivity {
                 }
                 else if (Paths.isGoogleDocumentsUri(uri))
                 {
+
                     String id = uri.getLastPathSegment().split(":")[1];
                     boolean isVideo = uri.getLastPathSegment().split(":")[0].contains("video");
                     final String[] imageColumns = {MediaStore.Images.Media.DATA};
@@ -210,6 +215,8 @@ public class FilePickerActivity extends AppCompatActivity {
                     }
 
                     Intent intent = new Intent();
+                    if(mimeType != null)
+                        intent.putExtra("mimeType", mimeType);
                     intent.putExtra(URI, Uri.parse(selectedPath));
                     setResult(RESULT_OK, intent);
                     finish();
@@ -223,6 +230,8 @@ public class FilePickerActivity extends AppCompatActivity {
                         public void didSucceed(String newPath) {
                             hideProgress();
                             Intent intent = new Intent();
+                            if(mimeType != null)
+                                intent.putExtra("mimeType", mimeType);
                             intent.putExtra(URI, newPath);
                             setResult(RESULT_OK, intent);
                             finish();
@@ -245,6 +254,8 @@ public class FilePickerActivity extends AppCompatActivity {
                         public void didSucceed(String newPath) {
                             hideProgress();
                             Intent intent = new Intent();
+                            if(mimeType != null)
+                                intent.putExtra("mimeType", mimeType);
                             intent.putExtra(URI, newPath);
                             setResult(RESULT_OK, intent);
                             finish();
@@ -367,6 +378,8 @@ public class FilePickerActivity extends AppCompatActivity {
                         }
 
                         Intent intent = new Intent();
+                        if(mimeType != null)
+                            intent.putExtra("mimeType", mimeType);
                         intent.putExtra(URI, file.getAbsolutePath());
                         setResult(RESULT_OK, intent);
                         finish();

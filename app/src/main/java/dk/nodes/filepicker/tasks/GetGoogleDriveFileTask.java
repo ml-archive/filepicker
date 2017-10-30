@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import dk.nodes.filepicker.BuildConfig;
+import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
 
 /**
  * Created by Nicolaj on 15-10-2015.
@@ -35,6 +36,7 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
     @Override
     protected String doInBackground(Void... params) {
         Log.i(TAG, "Google drive: " + uri.toString());
+
         Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
         File outputFile = null;
         try {
@@ -62,7 +64,8 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
                     size = "Unknown";
                 }
                 Log.i(TAG, "Size: " + size);
-                outputFile = new File(Environment.getExternalStorageDirectory(), displayName.replace(" ","_"));
+                //outputFile = new File(Environment.getExternalStorageDirectory(), displayName.replace(" ","_"));
+                outputFile = new File(Environment.getExternalStorageDirectory(), displayName);
                 OutputStream os = new FileOutputStream(outputFile);
                 InputStream is = context.getContentResolver().openInputStream(uri);
 
@@ -74,17 +77,21 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
                         if (count == - 1) {
                             break;
                         }
+                        Log.e("DEBUG", "Read " + count + " bytes from input stream");
                         os.write(bytes, 0, count);
                     }
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     if (BuildConfig.DEBUG) Log.e("", ex.toString());
                 }
 
             }
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
             if (BuildConfig.DEBUG) Log.e("", e.toString());
         } finally {
             cursor.close();
+
         }
         return Uri.fromFile(outputFile).toString();
     }
