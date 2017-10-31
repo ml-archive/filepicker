@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -15,7 +16,9 @@ import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
@@ -178,5 +181,46 @@ public class FilePickerUriHelper {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static boolean isVirtualFile(Context context, Uri uri) {
+        // virtual files is an android 7 thing
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT)
+        {
+            return false;
+        }
+
+        if (!DocumentsContract.isDocumentUri(context, uri)) {
+            return false;
+        }
+
+        Cursor cursor = context.getContentResolver().query(
+                uri,
+                new String[] { DocumentsContract.Document.COLUMN_FLAGS },
+                null, null, null);
+
+        int flags = 0;
+        if (cursor.moveToFirst()) {
+            flags = cursor.getInt(0);
+        }
+        cursor.close();
+
+        return (flags & DocumentsContract.Document.FLAG_VIRTUAL_DOCUMENT) != 0;
+    }
+
+    public static InputStream getInputStreamForVirtualFile(Context context, Uri uri, String mimeTypeFilter) throws IOException
+    {
+        ContentResolver resolver = context.getContentResolver();
+
+        String[] openableMimeTypes = resolver.getStreamTypes(uri, mimeTypeFilter);
+
+        if (openableMimeTypes == null ||
+                openableMimeTypes.length < 1) {
+            throw new FileNotFoundException();
+        }
+
+        return resolver
+                .openTypedAssetFileDescriptor(uri, openableMimeTypes[0], null)
+                .createInputStream();
     }
 }

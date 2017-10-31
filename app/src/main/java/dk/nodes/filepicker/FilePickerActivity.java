@@ -356,11 +356,14 @@ public class FilePickerActivity extends AppCompatActivity {
                         File filesDir = getCacheDir();
                         File file = null;
                         if(filename == null) {
-                            file = new File(filesDir, "f" + String.format("%04d", new Random().nextInt(10000)) + "." + fileExtension);
+                            if(fileExtension != null)
+                                file = new File(filesDir, "f" + String.format("%04d", new Random().nextInt(10000)) + "." + fileExtension);
+                            else
+                                file = new File(filesDir, "f" + String.format("%04d", new Random().nextInt(10000)));
                         }
                         else
                         {
-                            if(!filename.contains("."))
+                            if(!filename.contains(".") && fileExtension != null)
                                 file = new File(filesDir, filename + "." + fileExtension);
                             else
                                 file = new File(filesDir, filename);
@@ -528,60 +531,68 @@ public class FilePickerActivity extends AppCompatActivity {
 
     private String getFilenameFromDownloadProvider(long id)
     {
-        final Uri contentUri = ContentUris.withAppendedId(
-                Uri.parse("content://downloads/public_downloads"), id);
+        try {
+            final Uri contentUri = ContentUris.withAppendedId(
+                    Uri.parse("content://downloads/public_downloads"), id);
 
-        String selectedPath = getDataColumn(getBaseContext(), contentUri, null, null);
-        if(selectedPath != null)
-        {
-            if(selectedPath.contains("/"))
-            {
-                String[] parts = selectedPath.split("/");
-                if(parts.length > 0)
-                {
-                    selectedPath = parts[parts.length-1];
+            String selectedPath = getDataColumn(getBaseContext(), contentUri, null, null);
+            if (selectedPath != null) {
+                if (selectedPath.contains("/")) {
+                    String[] parts = selectedPath.split("/");
+                    if (parts.length > 0) {
+                        selectedPath = parts[parts.length - 1];
+                    }
                 }
             }
+            return selectedPath;
         }
-        return selectedPath;
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 
     private String getFilenameFromMediaStore(String id)
     {
-        if(id == null)
-            return null;
-        final String[] imageColumns = {MediaStore.Images.Media.DATA};
-        final String imageOrderBy = null;
-        Uri baseUri;
-        String state = Environment.getExternalStorageState();
-        if (! state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
-            baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
-        } else {
-            baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        }
+        try {
+            if (id == null)
+                return null;
+            final String[] imageColumns = {MediaStore.Images.Media.DATA};
+            final String imageOrderBy = null;
+            Uri baseUri;
+            String state = Environment.getExternalStorageState();
+            if (!state.equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
+                baseUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+            } else {
+                baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            }
 
-        String selectedPath = null;
-        Cursor cursor = null;
+            String selectedPath = null;
+            Cursor cursor = null;
 
-        cursor = getContentResolver().query(baseUri, imageColumns, MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
+            cursor = getContentResolver().query(baseUri, imageColumns, MediaStore.Images.Media._ID + "=" + id, null, imageOrderBy);
 
-        if (cursor.moveToFirst()) {
-            selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-        }
-        cursor.close();
-        if(selectedPath != null)
-        {
-            if(selectedPath.contains("/"))
-            {
-                String[] parts = selectedPath.split("/");
-                if(parts.length > 0)
-                {
-                    selectedPath = parts[parts.length-1];
+            if (cursor.moveToFirst()) {
+                selectedPath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+            }
+            cursor.close();
+            if (selectedPath != null) {
+                if (selectedPath.contains("/")) {
+                    String[] parts = selectedPath.split("/");
+                    if (parts.length > 0) {
+                        selectedPath = parts[parts.length - 1];
+                    }
                 }
             }
+            return selectedPath;
         }
-        return selectedPath;
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private String getFilenameFromMediaProvider(Uri uri)
@@ -678,15 +689,14 @@ public class FilePickerActivity extends AppCompatActivity {
 
     private String getSAFDisplayName(Uri uri) {
 
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
+            return null;
         // The query, since it only applies to a single document, will only return
         // one row. There's no need to filter, sort, or select fields, since we want
         // all fields for one document.
         Cursor cursor = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            cursor = getContentResolver().query(uri, null, null, null, null, null);
-        }
-
         try {
+            cursor = getContentResolver().query(uri, null, null, null, null, null);
             // moveToFirst() returns false if the cursor has 0 rows.  Very handy for
             // "if there's anything to look at, look at it" conditionals.
             if (cursor != null && cursor.moveToFirst()) {
@@ -695,7 +705,7 @@ public class FilePickerActivity extends AppCompatActivity {
                 // provider-specific, and might not necessarily be the file name.
                 String displayName = cursor.getString(
                         cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                //Log.e("DEBUG", "Display Name: " + displayName);
+                Log.e("DEBUG", "SAF Display Name: " + displayName);
                 return displayName;
             }
         }
@@ -704,7 +714,8 @@ public class FilePickerActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         finally {
-            cursor.close();
+            if(cursor != null)
+                cursor.close();
         }
         return null;
     }

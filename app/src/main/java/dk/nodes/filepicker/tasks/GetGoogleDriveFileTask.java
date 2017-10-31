@@ -11,6 +11,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -65,9 +66,27 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
                 }
                 Log.i(TAG, "Size: " + size);
                 //outputFile = new File(Environment.getExternalStorageDirectory(), displayName.replace(" ","_"));
+
                 outputFile = new File(Environment.getExternalStorageDirectory(), displayName);
                 OutputStream os = new FileOutputStream(outputFile);
-                InputStream is = context.getContentResolver().openInputStream(uri);
+
+                InputStream is = null;
+                if(FilePickerUriHelper.isVirtualFile(context, uri))
+                {
+                    Log.e("DEBUG", "File is virtual, commencing virtual file procedures");
+                    try {
+                        is = FilePickerUriHelper.getInputStreamForVirtualFile(context, uri, "*/*");
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                        throw(new FileNotFoundException("Could not get file descriptor for virtual file"));
+                    }
+                }
+                else {
+                    Log.e("DEBUG", "Looks like we got ourselves a regular ole' file");
+                    is = context.getContentResolver().openInputStream(uri);
+                }
 
                 final int bufferSize = 1024;
                 try {
