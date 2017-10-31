@@ -24,9 +24,12 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import dk.nodes.filepicker.utils.Logger;
+
 import static dk.nodes.filepicker.FilePickerConstants.URI;
 
 public class FilePickerUriHelper {
+    public static final String TAG = FilePickerUriHelper.class.getSimpleName();
 
     public static String getUriString(@NonNull Intent intent) {
         if(intent.getData() != null) {
@@ -131,13 +134,13 @@ public class FilePickerUriHelper {
         try {
             String mimeType = context.getContentResolver().getType(uri);
             String extension;
-            Log.e("DEBUG", "uri: " + uri.toString());
+            Logger.logd(TAG, "uri: " + uri.toString());
             if(uri.getScheme() == null)
             {
-                Log.e("DEBUG", "Uri.scheme == null");
+                Logger.logd(TAG, "Uri.scheme == null");
             }
             if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
-                Log.e("DEBUG", "mime.getExtensionFromMimeType: " + mimeType);
+                Logger.loge(TAG, "mime.getExtensionFromMimeType: " + mimeType);
                 // WORKAROUND: we got a device with a buggy cam app that sets the incorrect mimetype, correct it
                 if("image/jpg".contentEquals(mimeType))
                 {
@@ -145,9 +148,9 @@ public class FilePickerUriHelper {
                 }
                 final MimeTypeMap mime = MimeTypeMap.getSingleton();
                 extension = mime.getExtensionFromMimeType(mimeType);
-                Log.e("DEBUG", "extension: " + extension);
+                Logger.logd(TAG, "extension: " + extension);
             } else {
-                Log.e("DEBUG", "MimeTypeMap.getFileExtensionFromUrl");
+                Logger.logd(TAG, "MimeTypeMap.getFileExtensionFromUrl");
                 extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
             }
             return extension;

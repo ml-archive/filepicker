@@ -1,4 +1,4 @@
-package dk.nodes.filepicker.tasks;
+package dk.nodes.filepicker.processors.tasks;
 
 import android.content.Context;
 import android.net.Uri;
@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import dk.nodes.filepicker.BuildConfig;
+import dk.nodes.filepicker.utils.Logger;
 
 /**
  * Created by Nicolaj on 15-10-2015.
@@ -62,7 +63,7 @@ public class GetFileTask extends AsyncTask<Void, String, String> {
             os.close();
             return Uri.fromFile(f).toString();
         } catch (Exception ex) {
-            if (BuildConfig.DEBUG) Log.e("", ex.toString());
+            Logger.loge(TAG, ex.toString());
             return null;
         }
     }
@@ -90,7 +91,7 @@ public class GetFileTask extends AsyncTask<Void, String, String> {
                 os.write(bytes, 0, count);
             }
         } catch (Exception ex) {
-            if (BuildConfig.DEBUG) Log.e("", ex.toString());
+            Logger.loge(TAG, ex.toString());
         }
     }
 

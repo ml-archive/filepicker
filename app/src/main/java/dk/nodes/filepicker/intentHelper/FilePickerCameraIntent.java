@@ -8,8 +8,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 
 public class FilePickerCameraIntent {
-    public static boolean isCamera = false;
-
     public static Intent cameraIntent(@NonNull Uri uri) {
         return new Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)

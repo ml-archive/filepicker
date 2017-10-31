@@ -1,4 +1,4 @@
-package dk.nodes.filepicker.tasks;
+package dk.nodes.filepicker.processors.tasks;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -17,6 +17,7 @@ import java.io.OutputStream;
 
 import dk.nodes.filepicker.BuildConfig;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
+import dk.nodes.filepicker.utils.Logger;
 
 /**
  * Created by Nicolaj on 15-10-2015.
@@ -73,7 +74,7 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
                 InputStream is = null;
                 if(FilePickerUriHelper.isVirtualFile(context, uri))
                 {
-                    Log.e("DEBUG", "File is virtual, commencing virtual file procedures");
+                    Logger.logd(TAG, "File is virtual, commencing virtual file procedures");
                     try {
                         is = FilePickerUriHelper.getInputStreamForVirtualFile(context, uri, "*/*");
                     }
@@ -84,7 +85,7 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
                     }
                 }
                 else {
-                    Log.e("DEBUG", "Looks like we got ourselves a regular ole' file");
+                    Logger.loge(TAG, "Looks like we got ourselves a regular ole' file");
                     is = context.getContentResolver().openInputStream(uri);
                 }
 
@@ -96,20 +97,20 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
                         if (count == - 1) {
                             break;
                         }
-                        Log.e("DEBUG", "Read " + count + " bytes from input stream");
                         os.write(bytes, 0, count);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    if (BuildConfig.DEBUG) Log.e("", ex.toString());
+                    Logger.loge(TAG, ex.toString());
                 }
 
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            if (BuildConfig.DEBUG) Log.e("", e.toString());
+            Logger.loge(TAG, e.toString());
         } finally {
-            cursor.close();
+            if(cursor != null)
+                cursor.close();
 
         }
         return Uri.fromFile(outputFile).toString();
@@ -127,7 +128,7 @@ public class GetGoogleDriveFileTask extends AsyncTask<Void, String, String> {
     }
 
     public interface TaskListener{
-        public void didSucceed(String path);
-        public void didFail();
+        void didSucceed(String path);
+        void didFail();
     }
 }

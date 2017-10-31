@@ -12,7 +12,7 @@ allprojects { ext."signing.password" = System.getenv('password') }
 
 // Artifact settings
 def _group = 'dk.nodes.filepicker'
-def _version = '1.96'
+def _version = '2.0.0'
 def _archivesBaseName = 'filepicker'
 
 nexusStaging {

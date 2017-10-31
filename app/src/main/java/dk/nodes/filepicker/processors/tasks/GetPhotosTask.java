@@ -1,4 +1,4 @@
-package dk.nodes.filepicker.tasks;
+package dk.nodes.filepicker.processors.tasks;
 
 
 import android.content.Context;
@@ -16,11 +16,13 @@ import java.io.InputStream;
 
 import dk.nodes.filepicker.BuildConfig;
 import dk.nodes.filepicker.uriHelper.FilePickerUriHelper;
+import dk.nodes.filepicker.utils.Logger;
 
 /**
  * Created by joso on 26/03/15.
  */
 public class GetPhotosTask extends AsyncTask<Void, String, String> {
+    public static final String TAG = GetPhotosTask.class.getSimpleName();
 
     private Context context;
     private Uri uri;
@@ -51,11 +53,10 @@ public class GetPhotosTask extends AsyncTask<Void, String, String> {
             while ((len = reader.read(buf)) > 0) {
                 outStream.write(buf, 0, len);
             }
-
             return outputPath;
 
         } catch( Exception e ) {
-            if(BuildConfig.DEBUG) Log.e("", e.toString());
+            Logger.loge(TAG, e.toString());
         }
         return null;
     }
