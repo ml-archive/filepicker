@@ -4,7 +4,7 @@
 Gradle:
 ```
 dependencies {
-    compile 'dk.nodes.filepicker:filepicker:1.7'
+    compile 'dk.nodes.filepicker:filepicker:2.0.0'
 }
 ```
 
