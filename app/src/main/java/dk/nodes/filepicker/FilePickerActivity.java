@@ -112,7 +112,7 @@ public class FilePickerActivity extends AppCompatActivity implements UriProcessL
                     return;
                 }
 
-                Logger.logd(TAG, "Original URI = " + uriString);
+                Logger.loge(TAG, "Original URI = " + uriString);
 
                 Uri uri = Uri.parse(uriString);
 
@@ -128,8 +128,15 @@ public class FilePickerActivity extends AppCompatActivity implements UriProcessL
                 } catch (Exception e) {
                     Logger.loge(TAG, e.toString());
                 }
-
-                uriProcessor.process(getBaseContext(), uri, this);
+                if(uri != null) {
+                    uriProcessor.process(getBaseContext(), uri, this);
+                }
+                else
+                {
+                    Logger.loge(TAG, "Uri is NULL");
+                    setResult(RESULT_CODE_FAILURE);
+                    finish();
+                }
             }
         } else if (resultCode == RESULT_CANCELED) {
             setResult(RESULT_CANCELED);

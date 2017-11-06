@@ -25,6 +25,7 @@ public class GooglePhotosProcessor implements IUriProcessor {
             if(uriProcessListener != null) {
                 Logger.loge(TAG, "URI not recognized, bailing out");
                 uriProcessListener.onProcessingFailure();
+                return;
             }
         }
 

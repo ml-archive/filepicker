@@ -27,6 +27,7 @@ public class GoogleDocumentsProcessor implements IUriProcessor {
             if(uriProcessListener != null) {
                 Logger.loge(TAG, "URI not recognized, bailing out");
                 uriProcessListener.onProcessingFailure();
+                return;
             }
         }
         final String mimeType = context.getContentResolver().getType(uri);

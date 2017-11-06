@@ -35,6 +35,8 @@ public class UriProcessor implements UriProcessListener {
     public void process(Context context, Uri uri, UriProcessListener listener)
     {
         this.listener = listener;
+        this.uri = uri;
+        this.context = context;
         currentProcessorIt = processors.iterator();
         processNext(context, uri);
     }
