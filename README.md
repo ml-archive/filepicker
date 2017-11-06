@@ -1,4 +1,6 @@
 # FilePicker
+The purpose of this library is taking whatever URI comes back from SAF (Storage Access Framework) or other android
+storage providers and turning it into an easy to read local file URI.
 
 ## Download
 Gradle:
