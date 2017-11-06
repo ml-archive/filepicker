@@ -4,9 +4,14 @@
 Gradle:
 ```
 dependencies {
-    compile 'dk.nodes.filepicker:filepicker:2.0.0'
+    compile 'dk.nodes.filepicker:filepicker:2.0.+'
 }
 ```
+
+The plus above might require you to upgrade the gradle plugin in AS:
+open $PROJECT_ROOT/gradle/wrapper/gradle-wrapper.properties and correct the line to:
+
+distributionUrl=https\://services.gradle.org/distributions/gradle-4.1-all.zip
 
 ## Wait, what is this?
 
